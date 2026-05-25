@@ -1,0 +1,138 @@
+<resources>
+    <string name="app_name">Touch Grass</string>
+
+    <!-- Home -->
+    <string name="home_not_touched">You haven\'t touched grass today</string>
+    <string name="home_touched_today">You touched grass today!</string>
+    <string name="home_go_outside_hint">Head outside for at least 5 minutes to complete your daily grass.</string>
+    <string name="home_today_minutes">%1$d minutes outside today — nice work.</string>
+    <string name="home_header">TOUCH GRASS 🌱</string>
+    <string name="stat_outdoor_time">Outdoor time</string>
+    <string name="stat_steps">Steps</string>
+    <string name="stat_distance">Distance</string>
+    <string name="stat_xp_today">XP today</string>
+    <string name="stat_minutes_short">%1$d min</string>
+    <string name="stat_steps_short">%1$,d</string>
+    <string name="stat_distance_short">%1$.1f km</string>
+    <string name="stat_xp_short">+%1$d</string>
+    <string name="streak_section">%1$d Day Nature Streak 🔥</string>
+    <string name="streak_start">Start your nature streak today</string>
+    <string name="daily_goal_label">Daily goal</string>
+    <string name="daily_goal_progress">%1$d / %2$d min</string>
+    <string name="companion_title">Your plant companion</string>
+    <string name="daily_challenge_title">Daily challenge</string>
+    <string name="challenge_complete">Complete! +40 XP</string>
+    <string name="quick_start_walk">Start walk</string>
+    <string name="quick_view_map">View map</string>
+    <string name="quick_challenges">Challenges</string>
+    <string name="streak_label">Day streak</string>
+    <string name="level_label">Level</string>
+    <string name="level_with_title">Level %1$d · %2$s</string>
+    <string name="start_outdoor_time">Start outdoor time</string>
+    <string name="continue_session">Continue outdoor session</string>
+    <string name="more_outdoor_time">Add more outdoor time</string>
+
+    <!-- Level titles -->
+    <string name="title_seed">Seed</string>
+    <string name="title_grass_walker">Grass Walker</string>
+    <string name="title_forest_scout">Forest Scout</string>
+    <string name="title_nature_guardian">Nature Guardian</string>
+
+    <!-- Daily challenges -->
+    <string name="challenge_outdoor_45_title">Touch grass for 45 mins</string>
+    <string name="challenge_outdoor_45_desc">Spend 45 minutes outside today.</string>
+    <string name="challenge_outdoor_30_title">Half hour outside</string>
+    <string name="challenge_outdoor_30_desc">Log 30 minutes of outdoor time.</string>
+    <string name="challenge_before_9_title">Early bird grass</string>
+    <string name="challenge_before_9_desc">Start a session before 9 AM and stay out 5+ minutes.</string>
+    <string name="challenge_outdoor_20_title">Quick nature break</string>
+    <string name="challenge_outdoor_20_desc">Spend 20 minutes outside today.</string>
+    <string name="challenge_visit_park_title">Visit a park today</string>
+    <string name="challenge_visit_park_desc">Visit a park on the map while touching grass today.</string>
+
+    <!-- Session -->
+    <string name="session_title">You\'re touching grass</string>
+    <string name="session_subtitle">Walk, explore, breathe. We\'ll track your outdoor time.</string>
+    <string name="session_goal_reached">Daily grass goal reached — end whenever you\'re ready.</string>
+    <string name="session_minutes_remaining">%1$d more min until today counts</string>
+    <string name="end_session">End session</string>
+    <string name="keep_session_background">Back (session keeps running)</string>
+    <string name="session_motion_stats">%1$,d steps · %2$.2f km this session</string>
+
+    <!-- Celebration -->
+    <string name="celebration_success">Grass touched! Your garden thanks you.</string>
+    <string name="celebration_first_grass">First grass of the journey — achievement unlocked!</string>
+    <string name="celebration_too_short">Almost — stay out a bit longer next time.</string>
+    <string name="celebration_level_up">Level up!</string>
+    <string name="celebration_challenge">Daily challenge complete!</string>
+    <string name="reward_minutes">Outdoor minutes</string>
+    <string name="reward_xp">XP earned</string>
+    <string name="reward_streak">Streak</string>
+    <string name="reward_level">Level</string>
+    <string name="reward_garden">Garden</string>
+    <string name="reward_streak_xp">Streak bonus</string>
+    <string name="reward_challenge_xp">Challenge bonus</string>
+    <string name="reward_steps_xp">Steps bonus</string>
+    <string name="reward_session_steps">Session steps</string>
+    <string name="reward_session_distance">Session distance</string>
+    <string name="celebration_discovered">Discovered: %1$s</string>
+    <string name="celebration_collectible">Collectible found!</string>
+    <string name="back_home">Back to home</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_map">Map</string>
+    <string name="nav_achievements">Badges</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Map -->
+    <string name="map_title">Explore nearby nature</string>
+    <string name="map_spot_visited">Visited ✓</string>
+    <string name="map_spot_unvisited">Walk within 80m to discover</string>
+    <string name="map_collectibles_title">Collectibles</string>
+    <string name="map_api_key_hint">Add MAPS_API_KEY to local.properties to enable the map view. Spots still appear in the list below.</string>
+    <string name="collectible_golden_leaf">Golden Leaf</string>
+    <string name="collectible_rain_frog">Rain Frog</string>
+    <string name="collectible_moon_flower">Moon Flower</string>
+    <string name="collectible_park_seed">Park Seed</string>
+
+    <!-- Achievements -->
+    <string name="achievements_title">Achievements</string>
+    <string name="achievements_unlocked_count">%1$d / %2$d unlocked</string>
+    <string name="achievement_locked">Locked</string>
+    <string name="achievement_first_walk_title">First Walk</string>
+    <string name="achievement_first_walk_desc">Complete your first outdoor session.</string>
+    <string name="achievement_ten_k_steps_title">10k Steps</string>
+    <string name="achievement_ten_k_steps_desc">Walk 10,000 steps in a day.</string>
+    <string name="achievement_marathon_grass_title">Marathon Grass Toucher</string>
+    <string name="achievement_marathon_grass_desc">Spend 3 hours outside total.</string>
+    <string name="achievement_park_explorer_title">Park Explorer</string>
+    <string name="achievement_park_explorer_desc">Visit a park on the adventure map.</string>
+    <string name="achievement_trail_wanderer_title">Trail Wanderer</string>
+    <string name="achievement_trail_wanderer_desc">Complete 5 outdoor sessions.</string>
+    <string name="achievement_streak_7_title">7 Day Streak</string>
+    <string name="achievement_streak_7_desc">Touch grass 7 days in a row.</string>
+    <string name="achievement_streak_30_title">30 Day Streak</string>
+    <string name="achievement_streak_30_desc">Touch grass 30 days in a row.</string>
+    <string name="achievement_rain_grass_title">Rain Grass</string>
+    <string name="achievement_rain_grass_desc">Complete an outdoor session while it\'s raining.</string>
+    <string name="achievement_sunrise_walker_title">Sunrise Walker</string>
+    <string name="achievement_sunrise_walker_desc">Start a session before 7 AM.</string>
+    <string name="achievement_midnight_explorer_title">Midnight Explorer</string>
+    <string name="achievement_midnight_explorer_desc">Start a session after 10 PM.</string>
+    <string name="category_walking">Walking</string>
+    <string name="category_exploration">Exploration</string>
+    <string name="category_consistency">Consistency</string>
+    <string name="category_rare">Rare</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Your profile</string>
+    <string name="profile_total_xp">Total XP</string>
+    <string name="profile_longest_streak">Longest streak</string>
+    <string name="profile_outdoor_hours">Outdoor hours</string>
+    <string name="profile_sessions">Sessions completed</string>
+    <string name="profile_achievements">Achievements</string>
+    <string name="profile_collectibles">Collectibles found</string>
+    <string name="profile_days">%1$d days</string>
+    <string name="profile_hours">%1$.1f hrs</string>
+</resources>
