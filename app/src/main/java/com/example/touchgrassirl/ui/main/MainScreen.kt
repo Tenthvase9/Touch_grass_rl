@@ -103,7 +103,7 @@ fun MainScreen(
             }
             MainTab.PROFILE -> {
                 val profileViewModel: ProfileViewModel = viewModel(
-                    factory = ProfileViewModel.Factory(repository),
+                    factory = ProfileViewModel.Factory(repository, socialRepository),
                 )
                 ProfileScreen(
                     viewModel = profileViewModel,
