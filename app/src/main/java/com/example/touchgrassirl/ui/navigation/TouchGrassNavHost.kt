@@ -1,32 +1,41 @@
 package com.example.touchgrassirl.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.touchgrassirl.TouchGrassApp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.touchgrassirl.data.repository.SessionResult
+import com.example.touchgrassirl.TouchGrassApp
+import com.example.touchgrassirl.data.repository.SocialRepository
 import com.example.touchgrassirl.data.repository.TouchGrassRepository
-import com.example.touchgrassirl.ui.celebration.CelebrationScreen
+import com.example.touchgrassirl.ui.history.SessionHistoryScreen
 import com.example.touchgrassirl.ui.main.MainScreen
-import com.example.touchgrassirl.ui.session.SessionScreen
-import com.example.touchgrassirl.ui.session.SessionViewModel
+import com.example.touchgrassirl.ui.profile.ProfileScreen
+import com.example.touchgrassirl.ui.profile.ProfileViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun TouchGrassNavHost(
     repository: TouchGrassRepository,
+    socialRepository: SocialRepository,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
-    var celebrationResult by remember { mutableStateOf<SessionResult?>(null) }
+    val app = LocalContext.current.applicationContext as TouchGrassApp
+    val profileViewModel: ProfileViewModel = viewModel(
+        factory = ProfileViewModel.Factory(repository, socialRepository),
+    )
+
+    LaunchedEffect(Unit) {
+        val profile = withContext(Dispatchers.IO) {
+            socialRepository.ensureProfileCreated()
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -36,44 +45,17 @@ fun TouchGrassNavHost(
         composable(Routes.MAIN) {
             MainScreen(
                 repository = repository,
-                onStartSession = { navController.navigate(Routes.SESSION) },
+                socialRepository = socialRepository,
+                myProfileId = profileViewModel.profileId,
+                onOpenHistory = { navController.navigate(Routes.HISTORY) },
             )
         }
 
-        composable(Routes.SESSION) {
-            val app = LocalContext.current.applicationContext as TouchGrassApp
-            val sessionViewModel: SessionViewModel = viewModel(
-                factory = SessionViewModel.Factory(
-                    repository = repository,
-                    motionTracker = app.sessionMotionTracker,
-                ),
+        composable(Routes.HISTORY) {
+            SessionHistoryScreen(
+                database = app.database,
+                onBack = { navController.popBackStack() },
             )
-            SessionScreen(
-                viewModel = sessionViewModel,
-                onSessionEnded = { result ->
-                    celebrationResult = result
-                    navController.navigate(Routes.CELEBRATION) {
-                        popUpTo(Routes.SESSION) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-                onCancel = {
-                    navController.popBackStack()
-                },
-            )
-        }
-
-        composable(Routes.CELEBRATION) {
-            val result = celebrationResult
-            if (result != null) {
-                CelebrationScreen(
-                    result = result,
-                    onDone = {
-                        celebrationResult = null
-                        navController.popBackStack(Routes.MAIN, inclusive = false)
-                    },
-                )
-            }
         }
     }
 }

@@ -19,6 +19,9 @@ interface OutdoorSessionDao {
     @Query("SELECT * FROM outdoor_sessions WHERE isActive = 1 LIMIT 1")
     suspend fun getActiveSession(): OutdoorSessionEntity?
 
+    @Query("SELECT * FROM outdoor_sessions WHERE isActive = 0 ORDER BY startMillis DESC")
+    suspend fun getAllCompleted(): List<OutdoorSessionEntity>
+
     @Insert
     suspend fun insert(session: OutdoorSessionEntity): Long
 

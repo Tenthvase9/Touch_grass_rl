@@ -1,34 +1,153 @@
 package com.example.touchgrassirl.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
-private val TouchGrassColorScheme = lightColorScheme(
+private val LightColors = lightColorScheme(
     primary = ForestGreen,
     onPrimary = Color.White,
-    primaryContainer = LeafLight,
+    primaryContainer = SoftSage,
     onPrimaryContainer = DeepForest,
-    secondary = MeadowGreen,
+    secondary = MeadowGreenDark,
     onSecondary = Color.White,
-    secondaryContainer = SkyMist,
+    secondaryContainer = SoftSage,
     onSecondaryContainer = DeepForest,
     tertiary = SunGold,
-    onTertiary = DeepForest,
-    background = CreamBackground,
+    onTertiary = Color.White,
+    background = CreamWhite,
     onBackground = DeepForest,
     surface = Color.White,
     onSurface = DeepForest,
-    surfaceVariant = SkyMist,
-    onSurfaceVariant = EarthBrown,
+    surfaceVariant = MistGray,
+    onSurfaceVariant = ForestGreen,
+    outline = MeadowGreen.copy(alpha = 0.4f),
+)
+
+private val DarkColors = darkColorScheme(
+    primary = MeadowGreenLight,
+    onPrimary = DeepForest,
+    primaryContainer = ForestGreen,
+    onPrimaryContainer = SoftSage,
+    secondary = MeadowGreen,
+    onSecondary = DeepForest,
+    secondaryContainer = MeadowGreenDark,
+    onSecondaryContainer = SoftSage,
+    tertiary = SunGold,
+    onTertiary = DeepForest,
+    background = DarkSurface,
+    onBackground = SoftSage,
+    surface = DarkCard,
+    onSurface = SoftSage,
+    surfaceVariant = DarkCard,
+    onSurfaceVariant = SoftSage,
+    outline = MeadowGreen.copy(alpha = 0.3f),
+)
+
+val AppTypography = Typography(
+    displayLarge = TextStyle(
+        fontWeight = FontWeight.Bold,
+        fontSize = 57.sp,
+        lineHeight = 64.sp,
+        letterSpacing = (-0.25).sp,
+    ),
+    displayMedium = TextStyle(
+        fontWeight = FontWeight.Bold,
+        fontSize = 45.sp,
+        lineHeight = 52.sp,
+    ),
+    displaySmall = TextStyle(
+        fontWeight = FontWeight.Bold,
+        fontSize = 36.sp,
+        lineHeight = 44.sp,
+    ),
+    headlineLarge = TextStyle(
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 32.sp,
+        lineHeight = 40.sp,
+    ),
+    headlineMedium = TextStyle(
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 28.sp,
+        lineHeight = 36.sp,
+    ),
+    headlineSmall = TextStyle(
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 24.sp,
+        lineHeight = 32.sp,
+    ),
+    titleLarge = TextStyle(
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+    ),
+    titleMedium = TextStyle(
+        fontWeight = FontWeight.Medium,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.15.sp,
+    ),
+    titleSmall = TextStyle(
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp,
+    ),
+    bodyLarge = TextStyle(
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp,
+    ),
+    bodyMedium = TextStyle(
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.25.sp,
+    ),
+    bodySmall = TextStyle(
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.4.sp,
+    ),
+    labelLarge = TextStyle(
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp,
+    ),
+    labelMedium = TextStyle(
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp,
+    ),
+    labelSmall = TextStyle(
+        fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp,
+    ),
 )
 
 @Composable
-fun TouchGrassIrlTheme(content: @Composable () -> Unit) {
+fun TouchGrassTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit,
+) {
+    val colorScheme = if (darkTheme) DarkColors else LightColors
+
     MaterialTheme(
-        colorScheme = TouchGrassColorScheme,
-        typography = Typography,
+        colorScheme = colorScheme,
+        typography = AppTypography,
         content = content,
     )
 }

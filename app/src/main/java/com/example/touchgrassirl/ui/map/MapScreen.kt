@@ -35,16 +35,31 @@ import com.example.touchgrassirl.ui.theme.CreamBackground
 import com.example.touchgrassirl.ui.theme.DeepForest
 import com.example.touchgrassirl.ui.theme.ForestGreen
 import com.example.touchgrassirl.ui.theme.MeadowGreen
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
+private val cartoVoyagerTileSource = XYTileSource(
+    "CartoDBVoyager",
+    0,
+    20,
+    256,
+    ".png",
+    arrayOf(
+        "https://a.basemaps.cartocdn.com/rastertiles/voyager/",
+        "https://b.basemaps.cartocdn.com/rastertiles/voyager/",
+        "https://c.basemaps.cartocdn.com/rastertiles/voyager/",
+        "https://d.basemaps.cartocdn.com/rastertiles/voyager/",
+    ),
+)
+
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,
+    onOpenWeekly: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -120,19 +135,21 @@ private fun AdventureMap(
     val context = LocalContext.current
     val mapView = remember {
         MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
+            setTileSource(cartoVoyagerTileSource)
             setMultiTouchControls(true)
+            setUseDataConnection(true)
             controller.setZoom(15.5)
             controller.setCenter(userLocation)
         }
     }
 
     // Update markers and user location overlay
-    AndroidView(
-        factory = { mapView },
-        modifier = Modifier.fillMaxSize(),
-        update = { mv ->
-            mv.overlays.clear()
+    Box(modifier = Modifier.fillMaxSize()) {
+        AndroidView(
+            factory = { mapView },
+            modifier = Modifier.fillMaxSize(),
+            update = { mv ->
+                mv.overlays.clear()
 
             // User location overlay
             val locationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(context), mv)
@@ -152,9 +169,20 @@ private fun AdventureMap(
                 }
                 mv.overlays.add(marker)
             }
-            mv.invalidate()
-        }
-    )
+                mv.invalidate()
+            }
+        )
+        Text(
+            text = "© OpenStreetMap contributors © CARTO",
+            style = MaterialTheme.typography.labelSmall,
+            color = DeepForest,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 2.dp)
+                .background(MeadowGreen.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
+                .padding(horizontal = 4.dp, vertical = 1.dp),
+        )
+    }
 
     LaunchedEffect(userLocation) {
         mapView.controller.animateTo(userLocation)

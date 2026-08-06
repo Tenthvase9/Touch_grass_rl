@@ -22,4 +22,7 @@ interface UserProgressDao {
 
     @Update
     suspend fun update(progress: UserProgressEntity): Int
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(progress: UserProgressEntity): Long
 }

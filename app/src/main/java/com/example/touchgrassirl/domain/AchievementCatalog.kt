@@ -92,6 +92,48 @@ object AchievementCatalog {
             category = AchievementCategory.RARE,
             emoji = "🌙",
         ),
+        AchievementDefinition(
+            id = "century_grass",
+            titleRes = R.string.achievement_century_grass_title,
+            descriptionRes = R.string.achievement_century_grass_desc,
+            category = AchievementCategory.WALKING,
+            emoji = "💯",
+        ),
+        AchievementDefinition(
+            id = "collector",
+            titleRes = R.string.achievement_collector_title,
+            descriptionRes = R.string.achievement_collector_desc,
+            category = AchievementCategory.EXPLORATION,
+            emoji = "🏆",
+        ),
+        AchievementDefinition(
+            id = "all_weather",
+            titleRes = R.string.achievement_all_weather_title,
+            descriptionRes = R.string.achievement_all_weather_desc,
+            category = AchievementCategory.RARE,
+            emoji = "🌈",
+        ),
+        AchievementDefinition(
+            id = "streak_3",
+            titleRes = R.string.achievement_streak_3_title,
+            descriptionRes = R.string.achievement_streak_3_desc,
+            category = AchievementCategory.CONSISTENCY,
+            emoji = "✨",
+        ),
+        AchievementDefinition(
+            id = "distance_10k",
+            titleRes = R.string.achievement_distance_10k_title,
+            descriptionRes = R.string.achievement_distance_10k_desc,
+            category = AchievementCategory.WALKING,
+            emoji = "🎯",
+        ),
+        AchievementDefinition(
+            id = "week_warrior",
+            titleRes = R.string.achievement_week_warrior_title,
+            descriptionRes = R.string.achievement_week_warrior_desc,
+            category = AchievementCategory.CONSISTENCY,
+            emoji = "📅",
+        ),
     )
 
     fun byId(id: String): AchievementDefinition? = all.find { it.id == id }
@@ -142,6 +184,24 @@ object AchievementCatalog {
         }
         if (isRaining && sessionCounted) {
             unlocked.add("rain_grass")
+        }
+        if (totalMinutes >= 100) {
+            unlocked.add("century_grass")
+        }
+        if (progress.totalSessionsCompleted >= 3) {
+            unlocked.add("collector")
+        }
+        if (streak >= 3) {
+            unlocked.add("streak_3")
+        }
+        if (progress.totalOutdoorMinutes >= 600) {
+            unlocked.add("distance_10k")
+        }
+        if (progress.totalSessionsCompleted >= 7) {
+            unlocked.add("week_warrior")
+        }
+        if (progress.dailyGoalMinutes >= 30 && streak >= 5 && isRaining && sessionCounted) {
+            unlocked.add("all_weather")
         }
         return unlocked
     }

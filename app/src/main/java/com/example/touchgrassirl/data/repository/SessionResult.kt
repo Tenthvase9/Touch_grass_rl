@@ -1,5 +1,7 @@
 package com.example.touchgrassirl.data.repository
 
+import java.io.Serializable
+
 data class SessionResult(
     val durationMinutes: Int,
     val sessionSteps: Int,
@@ -20,4 +22,4 @@ data class SessionResult(
     val newlyUnlockedAchievementIds: List<String>,
     val newlyCollectedIds: List<String>,
     val newlyVisitedSpotNames: List<String>,
-)
+) : Serializable

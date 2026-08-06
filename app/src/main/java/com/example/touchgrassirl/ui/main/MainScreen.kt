@@ -2,6 +2,7 @@ package com.example.touchgrassirl.ui.main
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -16,33 +17,46 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.touchgrassirl.data.repository.SocialRepository
 import com.example.touchgrassirl.data.repository.TouchGrassRepository
-import com.example.touchgrassirl.ui.achievements.AchievementsScreen
-import com.example.touchgrassirl.ui.achievements.AchievementsViewModel
+import com.example.touchgrassirl.ui.friends.FriendsScreen
+import com.example.touchgrassirl.ui.friends.FriendsViewModel
 import com.example.touchgrassirl.ui.home.HomeScreen
 import com.example.touchgrassirl.ui.home.HomeViewModel
-import com.example.touchgrassirl.ui.map.MapScreen
-import com.example.touchgrassirl.ui.map.MapViewModel
 import com.example.touchgrassirl.ui.navigation.MainTab
 import com.example.touchgrassirl.ui.profile.ProfileScreen
 import com.example.touchgrassirl.ui.profile.ProfileViewModel
-import com.example.touchgrassirl.ui.theme.CreamBackground
+import com.example.touchgrassirl.ui.settings.SettingsScreen
 import com.example.touchgrassirl.ui.theme.ForestGreen
-import com.example.touchgrassirl.ui.theme.MeadowGreen
+import com.example.touchgrassirl.ui.theme.SoftSage
 
 @Composable
 fun MainScreen(
     repository: TouchGrassRepository,
-    onStartSession: () -> Unit,
+    socialRepository: SocialRepository,
+    myProfileId: String,
+    onOpenHistory: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
+
+    if (showSettings) {
+        SettingsScreen(
+            repository = repository,
+            onBack = { showSettings = false },
+        )
+        return
+    }
 
     Scaffold(
         modifier = modifier,
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            NavigationBar(containerColor = CreamBackground) {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 0.dp,
+            ) {
                 MainTab.entries.forEach { tab ->
                     NavigationBarItem(
                         selected = selectedTab == tab,
@@ -57,7 +71,7 @@ fun MainScreen(
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = ForestGreen,
                             selectedTextColor = ForestGreen,
-                            indicatorColor = MeadowGreen.copy(alpha = 0.25f),
+                            indicatorColor = SoftSage.copy(alpha = 0.5f),
                             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
@@ -73,27 +87,17 @@ fun MainScreen(
                 )
                 HomeScreen(
                     viewModel = homeViewModel,
-                    onStartSession = onStartSession,
-                    onViewMap = { selectedTab = MainTab.MAP },
-                    onViewAchievements = { selectedTab = MainTab.ACHIEVEMENTS },
+                    onOpenSettings = { showSettings = true },
                     modifier = Modifier.padding(innerPadding),
                 )
             }
-            MainTab.MAP -> {
-                val mapViewModel: MapViewModel = viewModel(
-                    factory = MapViewModel.Factory(repository),
+            MainTab.FRIENDS -> {
+                val friendsViewModel: FriendsViewModel = viewModel(
+                    factory = FriendsViewModel.Factory(socialRepository),
                 )
-                MapScreen(
-                    viewModel = mapViewModel,
-                    modifier = Modifier.padding(innerPadding),
-                )
-            }
-            MainTab.ACHIEVEMENTS -> {
-                val achievementsViewModel: AchievementsViewModel = viewModel(
-                    factory = AchievementsViewModel.Factory(repository),
-                )
-                AchievementsScreen(
-                    viewModel = achievementsViewModel,
+                FriendsScreen(
+                    socialRepository = socialRepository,
+                    myProfileId = myProfileId,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -103,6 +107,8 @@ fun MainScreen(
                 )
                 ProfileScreen(
                     viewModel = profileViewModel,
+                    onOpenSettings = { showSettings = true },
+                    onOpenHistory = onOpenHistory,
                     modifier = Modifier.padding(innerPadding),
                 )
             }

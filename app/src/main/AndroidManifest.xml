@@ -6,6 +6,13 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <application
         android:name=".TouchGrassApp"
@@ -28,6 +35,44 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".data.service.TrackingService"
+            android:foregroundServiceType="location"
+            android:exported="false" />
+
+        <service
+            android:name=".data.service.OutdoorDetectionService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Automatic outdoor time tracking via geofence and activity recognition" />
+        </service>
+
+        <receiver
+            android:name=".data.service.ReminderReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".data.service.GeofenceReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".data.service.ActivityTransitionReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".ui.widget.TouchGrassWidget"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/touch_grass_widget_info" />
+        </receiver>
+
     </application>
 
 </manifest>

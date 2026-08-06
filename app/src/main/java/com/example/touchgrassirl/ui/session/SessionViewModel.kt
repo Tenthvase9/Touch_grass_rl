@@ -1,12 +1,15 @@
 package com.example.touchgrassirl.ui.session
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.touchgrassirl.data.motion.SessionMotionTracker
 import com.example.touchgrassirl.data.repository.SessionResult
 import com.example.touchgrassirl.data.repository.TouchGrassRepository
+import com.example.touchgrassirl.data.service.TrackingService
 import com.example.touchgrassirl.domain.GameConstants
+import com.example.touchgrassirl.domain.ProgressCalculator
 import com.example.touchgrassirl.domain.SessionMotionSnapshot
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,11 +29,13 @@ data class SessionUiState(
     val minMinutesRequired: Int = GameConstants.MIN_OUTDOOR_MINUTES,
     val steps: Int = 0,
     val distanceMeters: Int = 0,
+    val sessionXpEarned: Int = 0,
 )
 
 class SessionViewModel(
     private val repository: TouchGrassRepository,
     private val motionTracker: SessionMotionTracker,
+    private val appContext: Context,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SessionUiState())
@@ -43,6 +48,7 @@ class SessionViewModel(
     private var startMillis: Long = 0L
 
     init {
+        TrackingService.start(appContext)
         viewModelScope.launch {
             repository.ensureProgressInitialized()
             val session = repository.startSession()
@@ -57,10 +63,13 @@ class SessionViewModel(
     private fun observeMotion() {
         viewModelScope.launch {
             motionTracker.stats.collect { snapshot ->
+                val totalMinutes = ((System.currentTimeMillis() - startMillis) / 60_000L).toInt()
+                val xp = ProgressCalculator.outdoorMinutesXp(totalMinutes)
                 _uiState.update {
                     it.copy(
                         steps = snapshot.steps,
                         distanceMeters = snapshot.distanceMeters,
+                        sessionXpEarned = xp,
                     )
                 }
             }
@@ -88,23 +97,26 @@ class SessionViewModel(
             timerJob?.cancel()
             val motion: SessionMotionSnapshot = motionTracker.stop()
             val result = repository.endSession(sessionId, motion)
+            TrackingService.stop(appContext)
             _sessionEnded.emit(result)
         }
     }
 
     override fun onCleared() {
         motionTracker.stop()
+        TrackingService.stop(appContext)
         super.onCleared()
     }
 
     class Factory(
         private val repository: TouchGrassRepository,
         private val motionTracker: SessionMotionTracker,
+        private val appContext: Context,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(SessionViewModel::class.java)) {
-                return SessionViewModel(repository, motionTracker) as T
+                return SessionViewModel(repository, motionTracker, appContext) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

@@ -4,7 +4,11 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.touchgrassirl.data.repository.SocialRepository
 import com.example.touchgrassirl.data.repository.TouchGrassRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.example.touchgrassirl.domain.AchievementCatalog
 import com.example.touchgrassirl.domain.CollectibleCatalog
 import com.example.touchgrassirl.domain.LevelTitles
@@ -28,8 +32,21 @@ data class ProfileUiState(
 )
 
 class ProfileViewModel(
-    repository: TouchGrassRepository,
+    private val repository: TouchGrassRepository,
+    private val socialRepository: SocialRepository? = null,
 ) : ViewModel() {
+
+    var profileId: String = "GRASS-XXXXXX"
+        private set
+
+    init {
+        viewModelScope.launch {
+            val id = socialRepository?.ensureProfileCreated()
+            if (id != null) {
+                profileId = id
+            }
+        }
+    }
 
     val uiState: StateFlow<ProfileUiState> = combine(
         repository.observeProgress(),
@@ -57,11 +74,12 @@ class ProfileViewModel(
 
     class Factory(
         private val repository: TouchGrassRepository,
+        private val socialRepository: SocialRepository? = null,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
-                return ProfileViewModel(repository) as T
+                return ProfileViewModel(repository, socialRepository) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

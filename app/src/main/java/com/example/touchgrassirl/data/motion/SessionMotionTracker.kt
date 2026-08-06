@@ -23,6 +23,7 @@ class SessionMotionTracker(
     private val locationTracker: OutdoorLocationTracker,
     private val weatherClient: WeatherClient,
     private val onNearSpot: suspend (lat: Double, lng: Double) -> Unit,
+    private val onStatsUpdate: ((minutes: Int, steps: Int, xp: Int) -> Unit)? = null,
 ) : SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -39,10 +40,12 @@ class SessionMotionTracker(
 
     private var locationJob: Job? = null
     private var running = false
+    private var startTimeMillis: Long = 0L
 
     fun start(scope: CoroutineScope) {
         if (running) return
         running = true
+        startTimeMillis = System.currentTimeMillis()
         stepBaseline = null
         sessionSteps = 0
         distanceMeters = 0.0
@@ -109,6 +112,9 @@ class SessionMotionTracker(
                 newlyCollectedIds = it.newlyCollectedIds,
             )
         }
+        val elapsedMin = ((System.currentTimeMillis() - startTimeMillis) / 60_000L).toInt()
+        val xp = elapsedMin
+        onStatsUpdate?.invoke(elapsedMin, sessionSteps, xp)
     }
 
     fun appendExplorationResults(visited: List<String>, collected: List<String>) {

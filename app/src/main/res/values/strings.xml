@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Touch Grass</string>
+    <string name="app_name">Touch Grass 🌱</string>
 
     <!-- Home -->
     <string name="home_not_touched">You haven\'t touched grass today</string>
@@ -81,8 +81,7 @@
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
-    <string name="nav_map">Map</string>
-    <string name="nav_achievements">Badges</string>
+    <string name="nav_friends">Friends</string>
     <string name="nav_profile">Profile</string>
 
     <!-- Map -->
@@ -120,10 +119,27 @@
     <string name="achievement_sunrise_walker_desc">Start a session before 7 AM.</string>
     <string name="achievement_midnight_explorer_title">Midnight Explorer</string>
     <string name="achievement_midnight_explorer_desc">Start a session after 10 PM.</string>
+    <string name="achievement_century_grass_title">Century Grass</string>
+    <string name="achievement_century_grass_desc">Spend 100 total minutes outside.</string>
+    <string name="achievement_collector_title">Collector</string>
+    <string name="achievement_collector_desc">Complete 3 outdoor sessions.</string>
+    <string name="achievement_streak_3_title">3 Day Streak</string>
+    <string name="achievement_streak_3_desc">Touch grass 3 days in a row.</string>
+    <string name="achievement_distance_10k_title">10K Explorer</string>
+    <string name="achievement_distance_10k_desc">Spend 10 hours outside total.</string>
+    <string name="achievement_week_warrior_title">Week Warrior</string>
+    <string name="achievement_week_warrior_desc">Complete 7 outdoor sessions.</string>
+    <string name="achievement_all_weather_title">All-Weather Walker</string>
+    <string name="achievement_all_weather_desc">Complete a rainy session with a 5+ day streak.</string>
     <string name="category_walking">Walking</string>
     <string name="category_exploration">Exploration</string>
     <string name="category_consistency">Consistency</string>
     <string name="category_rare">Rare</string>
+
+    <!-- Collectibles -->
+    <string name="collectible_sunstone">Sunstone</string>
+    <string name="collectible_trail_feather">Trail Feather</string>
+    <string name="collectible_dew_drop">Dew Drop</string>
 
     <!-- Profile -->
     <string name="profile_title">Your profile</string>

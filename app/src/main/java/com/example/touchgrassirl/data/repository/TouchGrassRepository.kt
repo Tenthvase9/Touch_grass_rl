@@ -194,6 +194,9 @@ class TouchGrassRepository(
         )
     }
 
+    suspend fun checkWeather(latitude: Double, longitude: Double): Boolean =
+        cachedIsRaining(latitude, longitude)
+
     private suspend fun cachedIsRaining(latitude: Double, longitude: Double): Boolean {
         val now = System.currentTimeMillis()
         if (cachedIsRaining != null && now - rainCachedAtMillis < 10 * 60 * 1000) {
@@ -427,6 +430,30 @@ class TouchGrassRepository(
             }
         }
         return newlyUnlocked
+    }
+
+    suspend fun setDailyGoal(minutes: Int) {
+        val progress = progressDao.getProgress() ?: UserProgressEntity()
+        progressDao.update(progress.copy(dailyGoalMinutes = minutes.coerceIn(5, 120)))
+    }
+
+    suspend fun getWeeklyStats(): WeeklyStats {
+        val today = LocalDate.now()
+        var totalSteps = 0
+        val breakdown = (6 downTo 0).map { daysAgo ->
+            val day = today.minusDays(daysAgo.toLong())
+            val log = dailyLogDao.getForDay(day.toEpochDay())
+            totalSteps += log?.steps ?: 0
+            log?.outdoorMinutes ?: 0
+        }
+        val progress = progressDao.getProgress() ?: UserProgressEntity()
+        return WeeklyStats(
+            totalMinutes = breakdown.sum(),
+            totalSessions = progress.totalSessionsCompleted,
+            totalSteps = totalSteps,
+            streakDays = progress.longestStreak,
+            dailyBreakdown = breakdown.reversed(),
+        )
     }
 
     private fun emptySessionResult() = SessionResult(
