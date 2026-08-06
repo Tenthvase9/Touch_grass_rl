@@ -7,6 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.touchgrassirl.data.repository.SocialRepository
 import com.example.touchgrassirl.data.repository.TouchGrassRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.touchgrassirl.domain.AchievementCatalog
@@ -14,7 +17,6 @@ import com.example.touchgrassirl.domain.CollectibleCatalog
 import com.example.touchgrassirl.domain.LevelTitles
 import com.example.touchgrassirl.domain.ProgressCalculator
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
@@ -36,14 +38,38 @@ class ProfileViewModel(
     private val socialRepository: SocialRepository? = null,
 ) : ViewModel() {
 
-    var profileId: String = "GRASS-XXXXXX"
-        private set
+    private val _profileId = MutableStateFlow("GRASS-XXXXXX")
+    val profileId: StateFlow<String> = _profileId.asStateFlow()
+
+    private val _displayName = MutableStateFlow("Nature Explorer")
+    val displayName: StateFlow<String> = _displayName.asStateFlow()
 
     init {
         viewModelScope.launch {
-            val id = socialRepository?.ensureProfileCreated()
-            if (id != null) {
-                profileId = id
+            try {
+                val repo = socialRepository
+                if (repo == null) {
+                    _profileId.value = "GRASS-NO-REPO"
+                    return@launch
+                }
+                val id = repo.ensureProfileCreated()
+                _profileId.value = id
+                val name = repo.getMyDisplayName()
+                _displayName.value = name
+            } catch (e: Exception) {
+                android.util.Log.e("ProfileViewModel", "Failed to load profile", e)
+                _profileId.value = "GRASS-ERROR"
+            }
+        }
+    }
+
+    fun updateDisplayName(name: String) {
+        _displayName.value = name
+        viewModelScope.launch {
+            try {
+                socialRepository?.updateDisplayName(name)
+            } catch (e: Exception) {
+                android.util.Log.e("ProfileViewModel", "Failed to update name", e)
             }
         }
     }

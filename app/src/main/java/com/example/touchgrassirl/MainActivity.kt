@@ -52,6 +52,9 @@ class MainActivity : ComponentActivity() {
                     TouchGrassNavHost(
                         repository = repository,
                         socialRepository = socialRepository,
+                        onDarkThemeChange = { enabled ->
+                            isDarkTheme = enabled
+                        },
                     )
                 }
             }

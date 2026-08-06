@@ -46,6 +46,17 @@ android {
         compose = true
         buildConfig = true
     }
+
+    androidComponents {
+        onVariants { variant ->
+            variant.outputs.forEach { output ->
+                val name = output.outputFileName.get()
+                if (name.endsWith(".apk")) {
+                    output.outputFileName.set("TouchGrass-v${defaultConfig.versionName}.apk")
+                }
+            }
+        }
+    }
 }
 
 dependencies {

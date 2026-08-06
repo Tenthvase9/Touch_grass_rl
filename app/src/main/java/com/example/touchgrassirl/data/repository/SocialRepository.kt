@@ -19,6 +19,9 @@ interface SocialRepository {
     suspend fun sendGift(toProfileId: String, giftType: String, message: String)
     suspend fun claimGift(giftId: String)
 
+    suspend fun updateDisplayName(name: String) {}
+    suspend fun getMyDisplayName(): String = "Nature Explorer"
+
     suspend fun syncMyStats(outdoorMinutes: Int, streak: Int, level: Int) {}
 
     companion object {

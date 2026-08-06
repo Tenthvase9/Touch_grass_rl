@@ -64,10 +64,10 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     repository: TouchGrassRepository,
     onBack: () -> Unit,
+    onDarkThemeChange: (Boolean) -> Unit = {},
 ) {
     val progress by repository.observeProgress().collectAsState(initial = UserProgressEntity())
     var dailyGoal by remember(progress) { mutableIntStateOf(progress.dailyGoalMinutes.coerceIn(5, 120)) }
-    var notificationsEnabled by remember { mutableStateOf(true) }
     val prefs = LocalContext.current.getSharedPreferences("touch_grass_prefs", 0)
     var darkThemeEnabled by remember { mutableStateOf(prefs.getBoolean("dark_theme", false)) }
     var homeLocationSet by remember {
@@ -227,29 +227,13 @@ fun SettingsScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         SettingsToggle(
-                            title = "Daily reminders",
-                            subtitle = "Remind you to go outside",
-                            checked = notificationsEnabled,
-                            onCheckedChange = { notificationsEnabled = it },
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(20.dp),
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        SettingsToggle(
                             title = "Dark theme",
                             subtitle = "Use dark color scheme",
                             checked = darkThemeEnabled,
                             onCheckedChange = { enabled ->
                                 darkThemeEnabled = enabled
                                 prefs.edit().putBoolean("dark_theme", enabled).apply()
+                                onDarkThemeChange(enabled)
                             },
                         )
                     }
@@ -261,11 +245,6 @@ fun SettingsScreen(
                     onClick = {
                         scope.launch {
                             repository.setDailyGoal(dailyGoal)
-                            if (notificationsEnabled) {
-                                ReminderScheduler.scheduleDaily(context = context, hour = 10, minute = 0)
-                            } else {
-                                ReminderScheduler.cancel(context = context)
-                            }
                             onBack()
                         }
                     },

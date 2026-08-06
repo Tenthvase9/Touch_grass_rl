@@ -36,6 +36,7 @@ fun MainScreen(
     socialRepository: SocialRepository,
     myProfileId: String,
     onOpenHistory: () -> Unit = {},
+    onDarkThemeChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
@@ -45,6 +46,7 @@ fun MainScreen(
         SettingsScreen(
             repository = repository,
             onBack = { showSettings = false },
+            onDarkThemeChange = onDarkThemeChange,
         )
         return
     }

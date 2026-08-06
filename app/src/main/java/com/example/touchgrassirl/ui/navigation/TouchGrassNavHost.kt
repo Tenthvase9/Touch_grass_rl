@@ -23,6 +23,7 @@ import kotlinx.coroutines.withContext
 fun TouchGrassNavHost(
     repository: TouchGrassRepository,
     socialRepository: SocialRepository,
+    onDarkThemeChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
@@ -46,8 +47,9 @@ fun TouchGrassNavHost(
             MainScreen(
                 repository = repository,
                 socialRepository = socialRepository,
-                myProfileId = profileViewModel.profileId,
+                myProfileId = "",
                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
+                onDarkThemeChange = onDarkThemeChange,
             )
         }
 

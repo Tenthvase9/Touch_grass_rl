@@ -177,9 +177,18 @@ class FirebaseSocialRepository(
             ).await()
     }
 
-    override suspend fun claimGift(giftId: String) {
+    override     suspend fun claimGift(giftId: String) {
         giftsCollection().document(giftId)
             .update("claimed", true).await()
+    }
+
+    override suspend fun updateDisplayName(name: String) {
+        myProfileDoc().update("displayName", name).await()
+    }
+
+    override suspend fun getMyDisplayName(): String {
+        val doc = myProfileDoc().get().await()
+        return doc.getString("displayName") ?: "Nature Explorer"
     }
 
     override suspend fun syncMyStats(outdoorMinutes: Int, streak: Int, level: Int) {

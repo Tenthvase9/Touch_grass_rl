@@ -1,6 +1,7 @@
 package com.example.touchgrassirl.ui.friends
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material3.Button
@@ -74,6 +76,8 @@ fun FriendsScreen(
 
     var showAddFriend by remember { mutableStateOf(false) }
     var giftFriend by remember { mutableStateOf<FriendEntity?>(null) }
+    var selectedFriend by remember { mutableStateOf<FriendEntity?>(null) }
+    var showGifts by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize()) {
         Surface(
@@ -128,10 +132,17 @@ fun FriendsScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
+                        item {
+                            GiftsReceivedCard(
+                                socialRepository = socialRepository,
+                                onClick = { showGifts = true },
+                            )
+                        }
                         items(state.friends, key = { it.profileId }) { friend ->
                             FriendCard(
                                 friend = friend,
                                 onGift = { giftFriend = friend },
+                                onClick = { selectedFriend = friend },
                             )
                         }
                         item { Spacer(modifier = Modifier.height(80.dp)) }
@@ -173,6 +184,20 @@ fun FriendsScreen(
                 onGiftSent = { giftFriend = null },
             )
         }
+
+        selectedFriend?.let { friend ->
+            FriendDetailScreen(
+                friend = friend,
+                onBack = { selectedFriend = null },
+            )
+        }
+
+        if (showGifts) {
+            GiftsReceivedScreen(
+                socialRepository = socialRepository,
+                onBack = { showGifts = false },
+            )
+        }
     }
 }
 
@@ -181,11 +206,13 @@ private fun FriendCard(
     friend: FriendEntity,
     modifier: Modifier = Modifier,
     onGift: () -> Unit = {},
+    onClick: () -> Unit = {},
 ) {
     GlassCard(modifier = modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable(onClick = onClick)
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -379,4 +406,45 @@ private fun EmptyFriendsState() {
             textAlign = TextAlign.Center,
         )
     }
+}
+
+@Composable
+private fun GiftsReceivedCard(
+    socialRepository: SocialRepository,
+    onClick: () -> Unit,
+) {
+    GlassCard {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "\uD83C\uDF81",
+                fontSize = 24.sp,
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Gifts Received",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = "View gifts from friends",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "View gifts",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(10.dp))
 }
