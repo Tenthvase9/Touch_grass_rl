@@ -1,6 +1,7 @@
 package com.example.touchgrassirl.data.repository
 
 import com.example.touchgrassirl.data.local.entity.ActivityEntity
+import com.example.touchgrassirl.data.local.entity.ChallengeEntity
 import com.example.touchgrassirl.data.local.entity.FriendEntity
 import com.example.touchgrassirl.data.local.entity.GiftEntity
 import com.example.touchgrassirl.data.local.entity.LocationEntity
@@ -308,6 +309,87 @@ class FirebaseSocialRepository(
         val current = (doc.getLong("currentStreak") ?: 0).toInt()
         val longest = (doc.getLong("longestStreak") ?: 0).toInt()
         return current to longest
+    }
+
+    override suspend fun getAllFriendsStats(): List<FriendEntity> {
+        val friends = friendsCollection().whereEqualTo("status", "accepted").get().await()
+        return friends.documents.map { doc ->
+            FriendEntity(
+                profileId = doc.getString("profileId") ?: "",
+                displayName = doc.getString("displayName") ?: "",
+                totalOutdoorMinutes = (doc.getLong("outdoorMinutes") ?: 0).toInt(),
+                currentStreak = (doc.getLong("currentStreak") ?: 0).toInt(),
+                level = (doc.getLong("level") ?: 1).toInt(),
+                status = "accepted",
+            )
+        }
+    }
+
+    override suspend fun createChallenge(title: String, description: String, goalMinutes: Int, endDate: Long) {
+        myProfileDoc().collection("challenges").add(
+            mapOf(
+                "title" to title,
+                "description" to description,
+                "goalMinutes" to goalMinutes,
+                "endDate" to endDate,
+                "createdBy" to uid,
+                "createdAt" to System.currentTimeMillis(),
+                "participants" to listOf(uid),
+                "progress" to mapOf(uid to 0),
+            )
+        ).await()
+    }
+
+    override fun observeChallenges(): Flow<List<ChallengeEntity>> = callbackFlow {
+        val listener = myProfileDoc().collection("challenges")
+            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snap, _ ->
+                val challenges = snap?.documents?.map { doc ->
+                    @Suppress("UNCHECKED_CAST")
+                    val participants = (doc.get("participants") as? List<String>) ?: emptyList()
+                    @Suppress("UNCHECKED_CAST")
+                    val progress = (doc.get("progress") as? Map<String, Long>) ?: emptyMap()
+                    ChallengeEntity(
+                        id = doc.id,
+                        title = doc.getString("title") ?: "",
+                        description = doc.getString("description") ?: "",
+                        goalMinutes = (doc.getLong("goalMinutes") ?: 0).toInt(),
+                        endDate = doc.getLong("endDate") ?: 0,
+                        createdBy = doc.getString("createdBy") ?: "",
+                        participants = participants,
+                        progress = progress.mapValues { it.value.toInt() },
+                    )
+                } ?: emptyList()
+                trySend(challenges)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    override suspend fun joinChallenge(challengeId: String) {
+        val doc = myProfileDoc().collection("challenges").document(challengeId).get().await()
+        @Suppress("UNCHECKED_CAST")
+        val participants = (doc.get("participants") as? List<String>)?.toMutableList() ?: mutableListOf()
+        @Suppress("UNCHECKED_CAST")
+        val progress = (doc.get("progress") as? Map<String, Long>)?.toMutableMap() ?: mutableMapOf()
+        if (uid !in participants) {
+            participants.add(uid)
+            progress[uid] = 0
+            myProfileDoc().collection("challenges").document(challengeId).update(
+                mapOf("participants" to participants, "progress" to progress)
+            ).await()
+        }
+    }
+
+    override suspend fun updateChallengeProgress(challengeId: String, minutes: Int) {
+        myProfileDoc().collection("challenges").document(challengeId)
+            .update("progress.$uid", minutes.toLong()).await()
+    }
+
+    override suspend fun addWeatherBadge(weatherType: String) {
+        val badges = getWeatherBadges().toMutableMap()
+        badges[weatherType] = (badges[weatherType] ?: 0) + 1
+        updateWeatherBadges(badges)
+        addActivity("weather_badge", "Earned ${weatherType.replace("_", " ")} weather badge!")
     }
 
     private fun generateProfileId(): String {

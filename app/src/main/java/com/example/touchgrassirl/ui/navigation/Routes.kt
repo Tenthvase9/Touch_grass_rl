@@ -6,4 +6,6 @@ object Routes {
     const val SETTINGS = "settings"
     const val WEEKLY = "weekly"
     const val HISTORY = "history"
+    const val LEADERBOARD = "leaderboard"
+    const val ACTIVITY_FEED = "activity_feed"
 }

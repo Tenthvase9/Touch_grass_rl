@@ -30,6 +30,7 @@ data class ProfileUiState(
     val totalAchievements: Int = AchievementCatalog.all.size,
     val collectedCount: Int = 0,
     val totalCollectibles: Int = CollectibleCatalog.all.size,
+    val weatherBadges: Map<String, Int> = emptyMap(),
 )
 
 class ProfileViewModel(
@@ -52,6 +53,9 @@ class ProfileViewModel(
     private val _avatar = MutableStateFlow("\uD83C\uDF31")
     val avatar: StateFlow<String> = _avatar.asStateFlow()
 
+    private val _weatherBadges = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val weatherBadges: StateFlow<Map<String, Int>> = _weatherBadges.asStateFlow()
+
     init {
         viewModelScope.launch {
             try {
@@ -67,6 +71,8 @@ class ProfileViewModel(
                 val profile = repo.getMyProfile()
                 _bio.value = (profile["bio"] as? String) ?: ""
                 _avatar.value = (profile["avatar"] as? String) ?: "\uD83C\uDF31"
+                @Suppress("UNCHECKED_CAST")
+                _weatherBadges.value = (profile["weatherBadges"] as? Map<String, Int>) ?: emptyMap()
             } catch (e: Exception) {
                 android.util.Log.e("ProfileViewModel", "Failed to load profile", e)
                 _profileId.value = "GRASS-ERROR"

@@ -82,6 +82,7 @@
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_friends">Friends</string>
+    <string name="nav_leaderboard">Leaderboard</string>
     <string name="nav_profile">Profile</string>
 
     <!-- Map -->

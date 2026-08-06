@@ -59,3 +59,14 @@ data class LocationEntity(
     val longitude: Double = 0.0,
     val timestampMillis: Long = 0,
 )
+
+data class ChallengeEntity(
+    val id: String = "",
+    val title: String = "",
+    val description: String = "",
+    val goalMinutes: Int = 0,
+    val endDate: Long = 0,
+    val createdBy: String = "",
+    val participants: List<String> = emptyList(),
+    val progress: Map<String, Int> = emptyMap(),
+)

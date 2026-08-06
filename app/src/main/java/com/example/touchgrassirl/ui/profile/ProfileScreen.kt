@@ -67,6 +67,7 @@ fun ProfileScreen(
     val currentStreak by viewModel.currentStreak.collectAsStateWithLifecycle()
     val bio by viewModel.bio.collectAsStateWithLifecycle()
     val avatar by viewModel.avatar.collectAsStateWithLifecycle()
+    val weatherBadges by viewModel.weatherBadges.collectAsStateWithLifecycle()
     val outdoorHours = state.totalOutdoorMinutes / 60f
 
     var showNameDialog by remember { mutableStateOf(false) }
@@ -258,6 +259,50 @@ fun ProfileScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Weather badges
+            GlassCard {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "\u26C5 Weather Badges",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    if (weatherBadges.isEmpty()) {
+                        Text(
+                            text = "Go outside in different weather to earn badges!",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            weatherBadges.forEach { (type, count) ->
+                                val emoji = when (type) {
+                                    "sunny" -> "\u2600\uFE0F"
+                                    "rainy" -> "\uD83C\uDF27\uFE0F"
+                                    "cloudy" -> "\u2601\uFE0F"
+                                    "snowy" -> "\u2744\uFE0F"
+                                    "windy" -> "\uD83C\uDF2C\uFE0F"
+                                    else -> "\uD83C\uDF31"
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(text = emoji, fontSize = 24.sp)
+                                    Text(
+                                        text = "$count",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 

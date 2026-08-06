@@ -32,7 +32,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Environment
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -73,8 +78,34 @@ fun SettingsScreen(
     var homeLocationSet by remember {
         mutableStateOf(prefs.contains("home_lat") && prefs.contains("home_lng"))
     }
+
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    val exportData: () -> Unit = {
+        scope.launch {
+            try {
+                val logs = repository.getWeeklyStats()
+                val csv = buildString {
+                    appendLine("Day,Minutes")
+                    logs.dailyBreakdown.forEachIndexed { index, minutes ->
+                        appendLine("Day ${index + 1},$minutes")
+                    }
+                }
+                val file = File(context.cacheDir, "outdoor_time_export.csv")
+                file.writeText(csv)
+                val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/csv"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                context.startActivity(Intent.createChooser(intent, "Export Data"))
+            } catch (e: Exception) {
+                android.util.Log.e("SettingsScreen", "Export failed", e)
+            }
+        }
+    }
 
     val getCurrentLocation: ((Double, Double) -> Unit) -> Unit = { callback ->
         val fusedClient = LocationServices.getFusedLocationProviderClient(context)
@@ -236,6 +267,37 @@ fun SettingsScreen(
                                 onDarkThemeChange(enabled)
                             },
                         )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Data export
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(20.dp),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Data Export",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Export your outdoor time history as CSV",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = { exportData() },
+                            colors = ButtonDefaults.buttonColors(containerColor = ForestGreen),
+                            shape = RoundedCornerShape(12.dp),
+                        ) {
+                            Text("Export CSV")
+                        }
                     }
                 }
 

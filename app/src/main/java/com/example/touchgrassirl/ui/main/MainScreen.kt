@@ -23,6 +23,8 @@ import com.example.touchgrassirl.ui.friends.FriendsScreen
 import com.example.touchgrassirl.ui.friends.FriendsViewModel
 import com.example.touchgrassirl.ui.home.HomeScreen
 import com.example.touchgrassirl.ui.home.HomeViewModel
+import com.example.touchgrassirl.ui.leaderboard.LeaderboardScreen
+import com.example.touchgrassirl.ui.leaderboard.LeaderboardViewModel
 import com.example.touchgrassirl.ui.navigation.MainTab
 import com.example.touchgrassirl.ui.profile.ProfileScreen
 import com.example.touchgrassirl.ui.profile.ProfileViewModel
@@ -36,6 +38,7 @@ fun MainScreen(
     socialRepository: SocialRepository,
     myProfileId: String,
     onOpenHistory: () -> Unit = {},
+    onOpenActivityFeed: () -> Unit = {},
     onDarkThemeChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -90,6 +93,7 @@ fun MainScreen(
                 HomeScreen(
                     viewModel = homeViewModel,
                     onOpenSettings = { showSettings = true },
+                    onOpenActivityFeed = onOpenActivityFeed,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -101,6 +105,12 @@ fun MainScreen(
                     socialRepository = socialRepository,
                     myProfileId = myProfileId,
                     modifier = Modifier.padding(innerPadding),
+                )
+            }
+            MainTab.LEADERBOARD -> {
+                LeaderboardScreen(
+                    socialRepository = socialRepository,
+                    onBack = { selectedTab = MainTab.FRIENDS },
                 )
             }
             MainTab.PROFILE -> {

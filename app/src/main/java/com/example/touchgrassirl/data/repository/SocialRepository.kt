@@ -1,6 +1,7 @@
 package com.example.touchgrassirl.data.repository
 
 import com.example.touchgrassirl.data.local.entity.ActivityEntity
+import com.example.touchgrassirl.data.local.entity.ChallengeEntity
 import com.example.touchgrassirl.data.local.entity.FriendEntity
 import com.example.touchgrassirl.data.local.entity.GiftEntity
 import com.example.touchgrassirl.data.local.entity.LocationEntity
@@ -38,6 +39,15 @@ interface SocialRepository {
 
     suspend fun updateWeatherBadges(badges: Map<String, Int>) {}
     suspend fun getWeatherBadges(): Map<String, Int> = emptyMap()
+
+    suspend fun getAllFriendsStats(): List<FriendEntity> = emptyList()
+
+    suspend fun createChallenge(title: String, description: String, goalMinutes: Int, endDate: Long) {}
+    fun observeChallenges(): Flow<List<ChallengeEntity>> = flowOf(emptyList())
+    suspend fun joinChallenge(challengeId: String) {}
+    suspend fun updateChallengeProgress(challengeId: String, minutes: Int) {}
+
+    suspend fun addWeatherBadge(weatherType: String) {}
 
     companion object {
         val GIFT_TYPES = listOf(

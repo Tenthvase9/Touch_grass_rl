@@ -2,7 +2,9 @@ package com.example.touchgrassirl.ui.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -14,5 +16,6 @@ enum class MainTab(
 ) {
     HOME(R.string.nav_home, Icons.Default.Home),
     FRIENDS(R.string.nav_friends, Icons.Default.People),
+    LEADERBOARD(R.string.nav_leaderboard, Icons.Default.Leaderboard),
     PROFILE(R.string.nav_profile, Icons.Default.Person),
 }
