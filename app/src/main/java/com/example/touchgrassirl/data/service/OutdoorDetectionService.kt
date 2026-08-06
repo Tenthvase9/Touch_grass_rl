@@ -233,6 +233,10 @@ class OutdoorDetectionService : Service() {
                     streak = progress.currentStreak,
                     level = level,
                 )
+                socialRepository?.addActivity(
+                    type = "outdoor_time",
+                    message = "Spent $minutes minutes outside",
+                )
             }
             updateNotification()
         }

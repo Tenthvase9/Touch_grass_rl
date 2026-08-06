@@ -1,7 +1,9 @@
 package com.example.touchgrassirl.data.repository
 
+import com.example.touchgrassirl.data.local.entity.ActivityEntity
 import com.example.touchgrassirl.data.local.entity.FriendEntity
 import com.example.touchgrassirl.data.local.entity.GiftEntity
+import com.example.touchgrassirl.data.local.entity.LocationEntity
 import com.example.touchgrassirl.data.repository.PendingRequestInfo
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -201,6 +203,111 @@ class FirebaseSocialRepository(
                 "lastActive" to System.currentTimeMillis(),
             )
         ).await()
+    }
+
+    override suspend fun addActivity(type: String, message: String) {
+        myProfileDoc().collection("activities").add(
+            mapOf(
+                "type" to type,
+                "message" to message,
+                "timestamp" to System.currentTimeMillis(),
+            )
+        ).await()
+    }
+
+    override fun observeActivities(): Flow<List<ActivityEntity>> = callbackFlow {
+        val listener = myProfileDoc().collection("activities")
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(50)
+            .addSnapshotListener { snap, _ ->
+                val activities = snap?.documents?.map { doc ->
+                    ActivityEntity(
+                        id = doc.id,
+                        profileId = doc.getString("profileId") ?: "",
+                        displayName = doc.getString("displayName") ?: "",
+                        type = doc.getString("type") ?: "",
+                        message = doc.getString("message") ?: "",
+                        timestampMillis = doc.getLong("timestamp") ?: 0,
+                    )
+                } ?: emptyList()
+                trySend(activities)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    override suspend fun updateProfile(bio: String, avatar: String) {
+        myProfileDoc().update(
+            mapOf(
+                "bio" to bio,
+                "avatar" to avatar,
+            )
+        ).await()
+    }
+
+    override suspend fun getMyProfile(): Map<String, Any?> {
+        val doc = myProfileDoc().get().await()
+        return mapOf(
+            "displayName" to doc.getString("displayName"),
+            "bio" to doc.getString("bio"),
+            "avatar" to doc.getString("avatar"),
+            "outdoorMinutes" to (doc.getLong("outdoorMinutes") ?: 0),
+            "streak" to (doc.getLong("streak") ?: 0),
+            "level" to (doc.getLong("level") ?: 1),
+        )
+    }
+
+    override suspend fun saveLocation(latitude: Double, longitude: Double, timestamp: Long) {
+        myProfileDoc().collection("locations").add(
+            mapOf(
+                "latitude" to latitude,
+                "longitude" to longitude,
+                "timestamp" to timestamp,
+            )
+        ).await()
+    }
+
+    override fun observeLocations(): Flow<List<LocationEntity>> = callbackFlow {
+        val listener = myProfileDoc().collection("locations")
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(100)
+            .addSnapshotListener { snap, _ ->
+                val locations = snap?.documents?.map { doc ->
+                    LocationEntity(
+                        id = doc.id,
+                        latitude = doc.getDouble("latitude") ?: 0.0,
+                        longitude = doc.getDouble("longitude") ?: 0.0,
+                        timestampMillis = doc.getLong("timestamp") ?: 0,
+                    )
+                } ?: emptyList()
+                trySend(locations)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    override suspend fun updateWeatherBadges(badges: Map<String, Int>) {
+        myProfileDoc().update("weatherBadges", badges).await()
+    }
+
+    override suspend fun getWeatherBadges(): Map<String, Int> {
+        val doc = myProfileDoc().get().await()
+        @Suppress("UNCHECKED_CAST")
+        return (doc.get("weatherBadges") as? Map<String, Int>) ?: emptyMap()
+    }
+
+    suspend fun updateStreak(currentStreak: Int, longestStreak: Int) {
+        myProfileDoc().update(
+            mapOf(
+                "currentStreak" to currentStreak,
+                "longestStreak" to longestStreak,
+            )
+        ).await()
+    }
+
+    suspend fun getStreak(): Pair<Int, Int> {
+        val doc = myProfileDoc().get().await()
+        val current = (doc.getLong("currentStreak") ?: 0).toInt()
+        val longest = (doc.getLong("longestStreak") ?: 0).toInt()
+        return current to longest
     }
 
     private fun generateProfileId(): String {

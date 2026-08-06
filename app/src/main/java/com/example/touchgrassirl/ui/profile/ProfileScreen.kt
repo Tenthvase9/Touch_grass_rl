@@ -2,6 +2,7 @@ package com.example.touchgrassirl.ui.profile
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -62,10 +64,16 @@ fun ProfileScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val profileId by viewModel.profileId.collectAsStateWithLifecycle()
     val displayName by viewModel.displayName.collectAsStateWithLifecycle()
+    val currentStreak by viewModel.currentStreak.collectAsStateWithLifecycle()
+    val bio by viewModel.bio.collectAsStateWithLifecycle()
+    val avatar by viewModel.avatar.collectAsStateWithLifecycle()
     val outdoorHours = state.totalOutdoorMinutes / 60f
 
     var showNameDialog by remember { mutableStateOf(false) }
     var editedName by remember(displayName) { mutableStateOf(displayName) }
+    var showProfileDialog by remember { mutableStateOf(false) }
+    var editedBio by remember { mutableStateOf("") }
+    var selectedAvatar by remember(avatar) { mutableStateOf(avatar) }
 
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -128,6 +136,60 @@ fun ProfileScreen(
                         contentDescription = "Edit nickname",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Streak + Avatar row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                GlassCard(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showProfileDialog = true }
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = selectedAvatar,
+                            fontSize = 32.sp,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Tap to edit",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                GlassCard(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = "\uD83D\uDD25",
+                            fontSize = 28.sp,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "$currentStreak",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = "day streak",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
 
@@ -227,7 +289,7 @@ fun ProfileScreen(
             ProfileStatCard(
                 emoji = "\uD83D\uDD25",
                 label = stringResource(R.string.profile_longest_streak),
-                value = stringResource(R.string.profile_days, state.longestStreak),
+                value = stringResource(R.string.profile_days, currentStreak),
             )
             ProfileStatCard(
                 emoji = "\uD83C\uDF3F",
@@ -268,6 +330,62 @@ fun ProfileScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showNameDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
+
+    if (showProfileDialog) {
+        val avatars = listOf("\uD83C\uDF31", "\uD83C\uDF3F", "\uD83C\uDF37", "\uD83C\uDF38", "\uD83C\uDF32", "\uD83D\uDC3B", "\uD83D\uDC31", "\uD83D\uDC36", "\uD83E\uDD8A", "\uD83D\uDC19")
+        AlertDialog(
+            onDismissRequest = { showProfileDialog = false },
+            title = { Text("Edit Profile") },
+            text = {
+                Column {
+                    Text("Choose avatar:", style = MaterialTheme.typography.labelMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        avatars.chunked(5).forEach { row ->
+                            Column {
+                                row.forEach { emoji ->
+                                    Text(
+                                        text = emoji,
+                                        fontSize = 28.sp,
+                                        modifier = Modifier
+                                            .clickable { selectedAvatar = emoji }
+                                            .padding(4.dp)
+                                            .background(
+                                                if (selectedAvatar == emoji) MaterialTheme.colorScheme.primaryContainer
+                                                else Color.Transparent,
+                                                RoundedCornerShape(8.dp)
+                                            ),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = editedBio,
+                        onValueChange = { editedBio = it },
+                        label = { Text("Bio (optional)") },
+                        maxLines = 2,
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.updateProfile(editedBio, selectedAvatar)
+                        showProfileDialog = false
+                    },
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showProfileDialog = false }) {
                     Text("Cancel")
                 }
             },

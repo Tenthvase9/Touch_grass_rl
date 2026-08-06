@@ -52,3 +52,10 @@ data class MyProfileEntity(
     val displayName: String,
     val createdAtMillis: Long = System.currentTimeMillis(),
 )
+
+data class LocationEntity(
+    val id: String = "",
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val timestampMillis: Long = 0,
+)

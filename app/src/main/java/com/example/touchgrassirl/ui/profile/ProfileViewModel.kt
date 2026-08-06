@@ -24,7 +24,6 @@ data class ProfileUiState(
     val level: Int = 1,
     @StringRes val levelTitleRes: Int = LevelTitles.titleResForLevel(1),
     val totalXp: Int = 0,
-    val longestStreak: Int = 0,
     val totalOutdoorMinutes: Int = 0,
     val totalSessions: Int = 0,
     val unlockedAchievements: Int = 0,
@@ -44,6 +43,15 @@ class ProfileViewModel(
     private val _displayName = MutableStateFlow("Nature Explorer")
     val displayName: StateFlow<String> = _displayName.asStateFlow()
 
+    private val _currentStreak = MutableStateFlow(0)
+    val currentStreak: StateFlow<Int> = _currentStreak.asStateFlow()
+
+    private val _bio = MutableStateFlow("")
+    val bio: StateFlow<String> = _bio.asStateFlow()
+
+    private val _avatar = MutableStateFlow("\uD83C\uDF31")
+    val avatar: StateFlow<String> = _avatar.asStateFlow()
+
     init {
         viewModelScope.launch {
             try {
@@ -56,6 +64,9 @@ class ProfileViewModel(
                 _profileId.value = id
                 val name = repo.getMyDisplayName()
                 _displayName.value = name
+                val profile = repo.getMyProfile()
+                _bio.value = (profile["bio"] as? String) ?: ""
+                _avatar.value = (profile["avatar"] as? String) ?: "\uD83C\uDF31"
             } catch (e: Exception) {
                 android.util.Log.e("ProfileViewModel", "Failed to load profile", e)
                 _profileId.value = "GRASS-ERROR"
@@ -74,6 +85,18 @@ class ProfileViewModel(
         }
     }
 
+    fun updateProfile(bio: String, avatar: String) {
+        _bio.value = bio
+        _avatar.value = avatar
+        viewModelScope.launch {
+            try {
+                socialRepository?.updateProfile(bio, avatar)
+            } catch (e: Exception) {
+                android.util.Log.e("ProfileViewModel", "Failed to update profile", e)
+            }
+        }
+    }
+
     val uiState: StateFlow<ProfileUiState> = combine(
         repository.observeProgress(),
         repository.observeUnlockedAchievements(),
@@ -84,7 +107,6 @@ class ProfileViewModel(
             level = level,
             levelTitleRes = LevelTitles.titleResForLevel(level),
             totalXp = progress.totalXp,
-            longestStreak = progress.longestStreak,
             totalOutdoorMinutes = progress.totalOutdoorMinutes,
             totalSessions = progress.totalSessionsCompleted,
             unlockedAchievements = achievements.size,

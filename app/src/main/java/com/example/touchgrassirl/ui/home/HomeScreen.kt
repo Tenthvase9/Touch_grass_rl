@@ -1,6 +1,7 @@
 package com.example.touchgrassirl.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -55,6 +57,7 @@ import com.example.touchgrassirl.ui.theme.SunGold
 fun HomeScreen(
     viewModel: HomeViewModel,
     onOpenSettings: () -> Unit = {},
+    onOpenActivityFeed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -164,6 +167,43 @@ fun HomeScreen(
                     message = motivationalMessage(state.todayMinutes, state.dailyGoal),
                     emoji = if (state.todayMinutes > 0) "\uD83C\uDF3F" else "\uD83D\uDEAA",
                 )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Activity feed link
+            GlassCard {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onOpenActivityFeed)
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "\uD83D\uDCCA",
+                        fontSize = 24.sp,
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Activity Feed",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = "See your outdoor activities",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "View feed",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
