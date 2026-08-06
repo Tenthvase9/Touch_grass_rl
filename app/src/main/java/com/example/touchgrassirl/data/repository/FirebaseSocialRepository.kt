@@ -161,13 +161,14 @@ class FirebaseSocialRepository(
         val targetDoc = targetDocs.firstOrNull() ?: return
         val targetUid = targetDoc.id
         val myProfileId = getMyProfileId()
+        val myName = getMyDisplayName()
 
         db.collection("users").document(targetUid)
             .collection("gifts")
             .add(
                 mapOf(
                     "fromProfileId" to myProfileId,
-                    "fromDisplayName" to "Friend",
+                    "fromDisplayName" to myName,
                     "toProfileId" to toProfileId,
                     "giftType" to giftType,
                     "message" to message,
