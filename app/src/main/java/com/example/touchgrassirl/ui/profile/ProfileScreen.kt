@@ -63,6 +63,7 @@ fun ProfileScreen(
     socialRepository: SocialRepository,
     onOpenSettings: () -> Unit = {},
     onOpenHistory: () -> Unit = {},
+    onOpenAchievements: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -343,6 +344,43 @@ fun ProfileScreen(
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = "View locations",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Achievements card
+            GlassCard {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onOpenAchievements)
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "\uD83C\uDFC6",
+                        fontSize = 24.sp,
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Achievements",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = "${state.unlockedAchievements} / ${state.totalAchievements} unlocked",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "View achievements",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

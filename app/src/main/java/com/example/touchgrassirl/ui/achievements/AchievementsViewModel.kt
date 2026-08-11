@@ -4,45 +4,41 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.touchgrassirl.data.repository.TouchGrassRepository
-import com.example.touchgrassirl.domain.AchievementCatalog
-import com.example.touchgrassirl.domain.AchievementDefinition
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-
-data class AchievementItemUi(
-    val definition: AchievementDefinition,
-    val unlocked: Boolean,
-)
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class AchievementsUiState(
-    val items: List<AchievementItemUi> = emptyList(),
+    val unlockedIds: Set<String> = emptySet(),
     val unlockedCount: Int = 0,
-    val totalCount: Int = AchievementCatalog.all.size,
 )
 
 class AchievementsViewModel(
-    repository: TouchGrassRepository,
+    private val repository: TouchGrassRepository,
 ) : ViewModel() {
 
-    val uiState: StateFlow<AchievementsUiState> = repository.observeUnlockedAchievements()
-        .map { unlocked ->
-            val ids = unlocked.map { it.id }.toSet()
-            val items = AchievementCatalog.all.map { def ->
-                AchievementItemUi(definition = def, unlocked = ids.contains(def.id))
+    private val _uiState = MutableStateFlow(AchievementsUiState())
+    val uiState: StateFlow<AchievementsUiState> = _uiState.asStateFlow()
+
+    init {
+        loadAchievements()
+    }
+
+    private fun loadAchievements() {
+        viewModelScope.launch {
+            repository.observeUnlockedAchievements().collect { achievements ->
+                val ids = achievements.map { it.id }.toSet()
+                _uiState.update {
+                    it.copy(
+                        unlockedIds = ids,
+                        unlockedCount = ids.size,
+                    )
+                }
             }
-            AchievementsUiState(
-                items = items,
-                unlockedCount = ids.size,
-                totalCount = AchievementCatalog.all.size,
-            )
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = AchievementsUiState(),
-        )
+    }
 
     class Factory(
         private val repository: TouchGrassRepository,

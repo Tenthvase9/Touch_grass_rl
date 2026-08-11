@@ -39,6 +39,7 @@ fun MainScreen(
     myProfileId: String,
     onOpenHistory: () -> Unit = {},
     onOpenActivityFeed: () -> Unit = {},
+    onOpenAchievements: () -> Unit = {},
     onDarkThemeChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -122,6 +123,7 @@ fun MainScreen(
                     socialRepository = socialRepository,
                     onOpenSettings = { showSettings = true },
                     onOpenHistory = onOpenHistory,
+                    onOpenAchievements = onOpenAchievements,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
