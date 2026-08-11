@@ -100,20 +100,47 @@ fun StatsScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Weekly chart
+            // Period toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PeriodChip(
+                    label = "Week",
+                    selected = state.selectedPeriod == "week",
+                    onClick = { viewModel.selectPeriod("week") },
+                    modifier = Modifier.weight(1f),
+                )
+                PeriodChip(
+                    label = "Month",
+                    selected = state.selectedPeriod == "month",
+                    onClick = { viewModel.selectPeriod("month") },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Chart
             GlassCard {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "This week",
+                        text = if (state.selectedPeriod == "week") "This week" else "This month",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Spacer(modifier = Modifier.height(20.dp))
-                    WeeklyBarChart(
-                        minutes = state.weeklyMinutes,
-                        todayIndex = state.todayIndex,
-                    )
+                    if (state.selectedPeriod == "week") {
+                        WeeklyBarChart(
+                            minutes = state.weeklyMinutes,
+                            todayIndex = state.todayIndex,
+                        )
+                    } else {
+                        MonthlyBarChart(
+                            minutes = state.monthlyMinutes,
+                        )
+                    }
                 }
             }
 
@@ -232,5 +259,86 @@ private fun StatRow(
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.SemiBold,
         )
+    }
+}
+
+@Composable
+private fun PeriodChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(36.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = if (selected) ForestGreen else MaterialTheme.colorScheme.surfaceVariant,
+    ) {
+        Box(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            )
+        }
+    }
+}
+
+@Composable
+private fun MonthlyBarChart(
+    minutes: List<Int>,
+    modifier: Modifier = Modifier,
+) {
+    val maxMinutes = (minutes.maxOrNull() ?: 1).coerceAtLeast(1)
+    val weeks = listOf("W1", "W2", "W3", "W4", "W5")
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        minutes.forEachIndexed { index, min ->
+            val fraction = min.toFloat() / maxMinutes
+            val animatedHeight = remember { Animatable(0f) }
+
+            LaunchedEffect(min) {
+                animatedHeight.animateTo(
+                    targetValue = fraction.coerceIn(0.02f, 1f),
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow,
+                    ),
+                )
+            }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "${min}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height((80 * animatedHeight.value).dp)
+                        .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                        .background(MeadowGreen),
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = weeks.getOrElse(index) { "" },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }

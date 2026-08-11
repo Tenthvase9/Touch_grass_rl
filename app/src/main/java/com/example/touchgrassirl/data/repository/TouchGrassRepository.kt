@@ -456,6 +456,32 @@ class TouchGrassRepository(
         )
     }
 
+    suspend fun getMonthlyStats(): WeeklyStats {
+        val today = LocalDate.now()
+        val startOfMonth = today.withDayOfMonth(1)
+        val weeks = mutableListOf<Int>()
+        for (week in 0..4) {
+            val weekStart = startOfMonth.plusDays((week * 7).toLong())
+            val weekEnd = weekStart.plusDays(6)
+            var weekTotal = 0
+            var day = weekStart
+            while (!day.isAfter(weekEnd) && !day.isAfter(today)) {
+                val log = dailyLogDao.getForDay(day.toEpochDay())
+                weekTotal += log?.outdoorMinutes ?: 0
+                day = day.plusDays(1)
+            }
+            weeks.add(weekTotal)
+        }
+        val progress = progressDao.getProgress() ?: UserProgressEntity()
+        return WeeklyStats(
+            totalMinutes = weeks.sum(),
+            totalSessions = progress.totalSessionsCompleted,
+            totalSteps = 0,
+            streakDays = progress.currentStreak,
+            dailyBreakdown = weeks,
+        )
+    }
+
     private fun emptySessionResult() = SessionResult(
         durationMinutes = 0,
         sessionSteps = 0,

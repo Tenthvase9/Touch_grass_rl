@@ -39,6 +39,7 @@ fun MainScreen(
     myProfileId: String,
     onOpenHistory: () -> Unit = {},
     onOpenActivityFeed: () -> Unit = {},
+    onOpenFriendActivityFeed: () -> Unit = {},
     onOpenAchievements: () -> Unit = {},
     onDarkThemeChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
@@ -105,6 +106,7 @@ fun MainScreen(
                 FriendsScreen(
                     socialRepository = socialRepository,
                     myProfileId = myProfileId,
+                    onOpenFriendActivityFeed = onOpenFriendActivityFeed,
                     modifier = Modifier.padding(innerPadding),
                 )
             }

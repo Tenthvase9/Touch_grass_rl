@@ -68,6 +68,7 @@ import com.example.touchgrassirl.ui.theme.SunGold
 fun FriendsScreen(
     socialRepository: SocialRepository,
     myProfileId: String,
+    onOpenFriendActivityFeed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val viewModel: FriendsViewModel = viewModel(
@@ -143,6 +144,11 @@ fun FriendsScreen(
                         item {
                             ChallengesCard(
                                 onClick = { showChallenges = true },
+                            )
+                        }
+                        item {
+                            FriendActivityCard(
+                                onClick = onOpenFriendActivityFeed,
                             )
                         }
                         items(state.friends, key = { it.profileId }) { friend ->
@@ -458,6 +464,46 @@ private fun GiftsReceivedCard(
             Icon(
                 Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = "View gifts",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(10.dp))
+}
+
+@Composable
+private fun FriendActivityCard(
+    onClick: () -> Unit,
+) {
+    GlassCard {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "\uD83D\uDC65",
+                fontSize = 24.sp,
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Friend Activity",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = "See what friends are up to",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "View activity",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

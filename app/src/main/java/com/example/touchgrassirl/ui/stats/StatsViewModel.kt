@@ -20,7 +20,9 @@ data class StatsUiState(
     val level: Int = 1,
     val totalXp: Int = 0,
     val weeklyMinutes: List<Int> = listOf(0, 0, 0, 0, 0, 0, 0),
+    val monthlyMinutes: List<Int> = listOf(0, 0, 0, 0),
     val todayIndex: Int = 0,
+    val selectedPeriod: String = "week",
     val motivationMessage: String = "",
 )
 
@@ -59,12 +61,20 @@ class StatsViewModel(
         viewModelScope.launch {
             try {
                 val weekly = repository.getWeeklyStats()
+                val monthly = repository.getMonthlyStats()
                 _uiState.update {
-                    it.copy(weeklyMinutes = weekly.dailyBreakdown)
+                    it.copy(
+                        weeklyMinutes = weekly.dailyBreakdown,
+                        monthlyMinutes = monthly.dailyBreakdown,
+                    )
                 }
             } catch (_: Exception) {
             }
         }
+    }
+
+    fun selectPeriod(period: String) {
+        _uiState.update { it.copy(selectedPeriod = period) }
     }
 
     private fun motivationForMinutes(minutes: Int): String = when {

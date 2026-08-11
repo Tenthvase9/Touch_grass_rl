@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -55,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.touchgrassirl.R
 import com.example.touchgrassirl.data.repository.TouchGrassRepository
@@ -75,9 +77,11 @@ fun SettingsScreen(
     var dailyGoal by remember(progress) { mutableIntStateOf(progress.dailyGoalMinutes.coerceIn(5, 120)) }
     val prefs = LocalContext.current.getSharedPreferences("touch_grass_prefs", 0)
     var darkThemeEnabled by remember { mutableStateOf(prefs.getBoolean("dark_theme", false)) }
+    var notificationsEnabled by remember { mutableStateOf(prefs.getBoolean("notifications_enabled", true)) }
     var homeLocationSet by remember {
         mutableStateOf(prefs.contains("home_lat") && prefs.contains("home_lng"))
     }
+    val profileId = prefs.getString("profile_id", "GRASS-XXXXXX") ?: "GRASS-XXXXXX"
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -298,6 +302,70 @@ fun SettingsScreen(
                         ) {
                             Text("Export CSV")
                         }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Account section
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(20.dp),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Account",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Profile ID",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = profileId,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.weight(1f),
+                            )
+                            IconButton(onClick = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Profile ID", profileId))
+                            }) {
+                                Icon(
+                                    Icons.Default.ContentCopy,
+                                    contentDescription = "Copy ID",
+                                    tint = ForestGreen,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Notifications
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(20.dp),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        SettingsToggle(
+                            title = "Daily reminders",
+                            subtitle = "Remind you to go outside",
+                            checked = notificationsEnabled,
+                            onCheckedChange = { notificationsEnabled = it },
+                        )
                     }
                 }
 

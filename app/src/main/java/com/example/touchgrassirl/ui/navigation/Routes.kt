@@ -9,6 +9,7 @@ object Routes {
     const val HISTORY = "history"
     const val LEADERBOARD = "leaderboard"
     const val ACTIVITY_FEED = "activity_feed"
+    const val FRIEND_ACTIVITY_FEED = "friend_activity_feed"
     const val CHALLENGES = "challenges"
     const val LOCATION_HISTORY = "location_history"
     const val ACHIEVEMENTS = "achievements"

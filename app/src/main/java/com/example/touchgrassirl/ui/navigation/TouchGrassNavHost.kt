@@ -17,6 +17,7 @@ import com.example.touchgrassirl.data.repository.TouchGrassRepository
 import com.example.touchgrassirl.ui.achievements.AchievementsScreen
 import com.example.touchgrassirl.ui.achievements.AchievementsViewModel
 import com.example.touchgrassirl.ui.activity.ActivityFeedScreen
+import com.example.touchgrassirl.ui.activity.FriendActivityFeedScreen
 import com.example.touchgrassirl.ui.challenges.ChallengesScreen
 import com.example.touchgrassirl.ui.history.SessionHistoryScreen
 import com.example.touchgrassirl.ui.leaderboard.LeaderboardScreen
@@ -75,6 +76,7 @@ fun TouchGrassNavHost(
                 myProfileId = profileId,
                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
                 onOpenActivityFeed = { navController.navigate(Routes.ACTIVITY_FEED) },
+                onOpenFriendActivityFeed = { navController.navigate(Routes.FRIEND_ACTIVITY_FEED) },
                 onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) },
                 onDarkThemeChange = onDarkThemeChange,
             )
@@ -89,6 +91,13 @@ fun TouchGrassNavHost(
 
         composable(Routes.ACTIVITY_FEED) {
             ActivityFeedScreen(
+                socialRepository = socialRepository,
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.FRIEND_ACTIVITY_FEED) {
+            FriendActivityFeedScreen(
                 socialRepository = socialRepository,
                 onBack = { navController.popBackStack() },
             )
