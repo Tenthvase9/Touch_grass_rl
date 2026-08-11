@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.touchgrassirl.data.local.dao.AchievementDao
 import com.example.touchgrassirl.data.local.dao.CollectedCollectibleDao
 import com.example.touchgrassirl.data.local.dao.DailyLogDao
@@ -63,9 +65,16 @@ abstract class TouchGrassDatabase : RoomDatabase() {
                     TouchGrassDatabase::class.java,
                     "touch_grass.db",
                 )
-                    .fallbackToDestructiveMigration(dropAllTables = true)
+                    .addMigrations(MIGRATION_4_5)
                     .build()
                     .also { instance = it }
             }
+
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE friends ADD COLUMN uid TEXT NOT NULL DEFAULT ''")
+                database.execSQL("CREATE TABLE IF NOT EXISTS sync_queue (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, operation TEXT NOT NULL, data TEXT NOT NULL, createdAtMillis INTEGER NOT NULL, retryCount INTEGER NOT NULL DEFAULT 0)")
+            }
+        }
     }
 }
