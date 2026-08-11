@@ -23,7 +23,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,14 +35,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.touchgrassirl.data.local.entity.FriendEntity
+import com.example.touchgrassirl.data.repository.SocialRepository
 import com.example.touchgrassirl.ui.theme.SoftSage
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendDetailScreen(
     friend: FriendEntity,
+    socialRepository: SocialRepository,
     onBack: () -> Unit = {},
+    onFriendRemoved: () -> Unit = {},
 ) {
+    val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -145,6 +153,33 @@ fun FriendDetailScreen(
                         label = "Profile ID",
                         value = friend.profileId.takeLast(6),
                         modifier = Modifier.weight(1f),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Remove friend button
+                Button(
+                    onClick = {
+                        scope.launch {
+                            try {
+                                socialRepository.removeFriend(friend.profileId)
+                                onFriendRemoved()
+                            } catch (e: Exception) {
+                                android.util.Log.e("FriendDetailScreen", "Failed to remove friend", e)
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text(
+                        "Remove Friend",
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        color = Color.White,
                     )
                 }
             }

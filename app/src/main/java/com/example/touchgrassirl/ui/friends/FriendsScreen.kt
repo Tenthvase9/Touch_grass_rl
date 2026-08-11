@@ -195,7 +195,9 @@ fun FriendsScreen(
         selectedFriend?.let { friend ->
             FriendDetailScreen(
                 friend = friend,
+                socialRepository = socialRepository,
                 onBack = { selectedFriend = null },
+                onFriendRemoved = { selectedFriend = null },
             )
         }
 

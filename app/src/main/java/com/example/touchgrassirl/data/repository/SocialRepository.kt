@@ -19,6 +19,7 @@ interface SocialRepository {
     suspend fun sendFriendRequest(targetProfileId: String)
     suspend fun acceptFriendRequest(friendUid: String)
     suspend fun declineFriendRequest(friendUid: String)
+    suspend fun removeFriend(friendUid: String)
 
     suspend fun sendGift(toProfileId: String, giftType: String, message: String)
     suspend fun claimGift(giftId: String)

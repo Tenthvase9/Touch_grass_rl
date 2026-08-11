@@ -20,6 +20,7 @@ import com.example.touchgrassirl.data.local.entity.GiftEntity
 import com.example.touchgrassirl.data.local.entity.MyProfileEntity
 import com.example.touchgrassirl.data.local.entity.OutdoorSessionEntity
 import com.example.touchgrassirl.data.local.entity.PendingRequestEntity
+import com.example.touchgrassirl.data.local.entity.SyncQueueEntity
 import com.example.touchgrassirl.data.local.entity.UserProgressEntity
 import com.example.touchgrassirl.data.local.entity.VisitedSpotEntity
 
@@ -36,8 +37,9 @@ import com.example.touchgrassirl.data.local.entity.VisitedSpotEntity
         GiftEntity::class,
         ActivityEntity::class,
         MyProfileEntity::class,
+        SyncQueueEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class TouchGrassDatabase : RoomDatabase() {

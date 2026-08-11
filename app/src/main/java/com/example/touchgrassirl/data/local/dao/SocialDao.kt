@@ -9,6 +9,7 @@ import com.example.touchgrassirl.data.local.entity.FriendEntity
 import com.example.touchgrassirl.data.local.entity.GiftEntity
 import com.example.touchgrassirl.data.local.entity.MyProfileEntity
 import com.example.touchgrassirl.data.local.entity.PendingRequestEntity
+import com.example.touchgrassirl.data.local.entity.SyncQueueEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -64,4 +65,16 @@ interface SocialDao {
 
     @Query("DELETE FROM activities WHERE timestampMillis < :olderThanMillis")
     suspend fun pruneOldActivities(olderThanMillis: Long)
+
+    @Insert
+    suspend fun enqueueSync(operation: SyncQueueEntity)
+
+    @Query("SELECT * FROM sync_queue ORDER BY createdAtMillis ASC LIMIT 10")
+    suspend fun getPendingSyncs(): List<SyncQueueEntity>
+
+    @Query("DELETE FROM sync_queue WHERE id = :id")
+    suspend fun removeSync(id: Long)
+
+    @Query("UPDATE sync_queue SET retryCount = retryCount + 1 WHERE id = :id")
+    suspend fun incrementRetry(id: Long)
 }

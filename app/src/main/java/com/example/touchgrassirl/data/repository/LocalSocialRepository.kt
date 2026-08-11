@@ -98,6 +98,11 @@ class LocalSocialRepository(
         socialDao.deletePendingRequest(friendUid)
     }
 
+    override suspend fun removeFriend(friendUid: String) {
+        socialDao.deleteFriend(friendUid)
+        socialDao.deletePendingRequest(friendUid)
+    }
+
     override suspend fun sendGift(toProfileId: String, giftType: String, message: String) {
         val myProfile = socialDao.getMyProfile() ?: return
         val gift = GiftEntity(

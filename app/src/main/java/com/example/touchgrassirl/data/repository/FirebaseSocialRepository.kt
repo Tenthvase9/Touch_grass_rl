@@ -118,6 +118,17 @@ class FirebaseSocialRepository(
             .collection("friends").document(uid).delete().await()
     }
 
+    override suspend fun removeFriend(friendUid: String) {
+        // Remove friend from my list
+        friendsCollection().document(friendUid).delete().await()
+        // Remove myself from their list
+        db.collection("users").document(friendUid)
+            .collection("friends").document(uid).delete().await()
+        // Clean up any pending requests
+        db.collection("users").document(friendUid)
+            .collection("pending_requests").document(uid).delete().await()
+    }
+
     override fun observePendingRequests(): Flow<List<PendingRequestInfo>> = callbackFlow {
         val listener = friendsCollection()
             .whereEqualTo("status", "pending")
