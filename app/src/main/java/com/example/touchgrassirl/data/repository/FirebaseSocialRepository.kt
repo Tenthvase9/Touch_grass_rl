@@ -58,6 +58,7 @@ class FirebaseSocialRepository(
                 val friends = snap?.documents?.map { doc ->
                     FriendEntity(
                         profileId = doc.getString("profileId") ?: "",
+                        uid = doc.id,
                         displayName = doc.getString("displayName") ?: "",
                         totalOutdoorMinutes = (doc.getLong("outdoorMinutes") ?: 0).toInt(),
                         currentStreak = (doc.getLong("streak") ?: 0).toInt(),
@@ -327,6 +328,7 @@ class FirebaseSocialRepository(
         return friends.documents.map { doc ->
             FriendEntity(
                 profileId = doc.getString("profileId") ?: "",
+                uid = doc.id,
                 displayName = doc.getString("displayName") ?: "",
                 totalOutdoorMinutes = (doc.getLong("outdoorMinutes") ?: 0).toInt(),
                 currentStreak = (doc.getLong("currentStreak") ?: 0).toInt(),

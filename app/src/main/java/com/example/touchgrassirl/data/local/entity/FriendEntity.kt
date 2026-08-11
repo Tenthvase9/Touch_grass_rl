@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "friends")
 data class FriendEntity(
     @PrimaryKey val profileId: String,
+    val uid: String = "",
     val displayName: String,
     val totalOutdoorMinutes: Int = 0,
     val currentStreak: Int = 0,

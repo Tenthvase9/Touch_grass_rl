@@ -163,7 +163,8 @@ fun FriendDetailScreen(
                     onClick = {
                         scope.launch {
                             try {
-                                socialRepository.removeFriend(friend.profileId)
+                                val uid = friend.uid.ifEmpty { friend.profileId }
+                                socialRepository.removeFriend(uid)
                                 onFriendRemoved()
                             } catch (e: Exception) {
                                 android.util.Log.e("FriendDetailScreen", "Failed to remove friend", e)
