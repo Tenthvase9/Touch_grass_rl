@@ -73,6 +73,8 @@ class ProfileViewModel(
                 _avatar.value = (profile["avatar"] as? String) ?: "\uD83C\uDF31"
                 @Suppress("UNCHECKED_CAST")
                 _weatherBadges.value = (profile["weatherBadges"] as? Map<String, Int>) ?: emptyMap()
+                val streakPair = repo.getStreak()
+                _currentStreak.value = streakPair.first
             } catch (e: Exception) {
                 android.util.Log.e("ProfileViewModel", "Failed to load profile", e)
                 _profileId.value = "GRASS-ERROR"

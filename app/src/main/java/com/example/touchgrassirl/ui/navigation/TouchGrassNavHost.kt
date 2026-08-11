@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -38,7 +39,7 @@ fun TouchGrassNavHost(
     )
 
     LaunchedEffect(Unit) {
-        val profile = withContext(Dispatchers.IO) {
+        val profileId = withContext(Dispatchers.IO) {
             socialRepository.ensureProfileCreated()
         }
     }
@@ -49,10 +50,11 @@ fun TouchGrassNavHost(
         modifier = modifier,
     ) {
         composable(Routes.MAIN) {
+            val profileId = profileViewModel.profileId.collectAsStateWithLifecycle("").value
             MainScreen(
                 repository = repository,
                 socialRepository = socialRepository,
-                myProfileId = "",
+                myProfileId = profileId,
                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
                 onOpenActivityFeed = { navController.navigate(Routes.ACTIVITY_FEED) },
                 onDarkThemeChange = onDarkThemeChange,

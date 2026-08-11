@@ -34,6 +34,8 @@ interface SocialRepository {
     suspend fun updateProfile(bio: String, avatar: String) {}
     suspend fun getMyProfile(): Map<String, Any?> = emptyMap()
 
+    suspend fun getStreak(): Pair<Int, Int> = 0 to 0
+
     suspend fun saveLocation(latitude: Double, longitude: Double, timestamp: Long) {}
     fun observeLocations(): Flow<List<LocationEntity>> = flowOf(emptyList())
 

@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can read/write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Friends subcollection
+      match /friends/{friendId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Gifts subcollection
+      match /gifts/{giftId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.resource.data.toProfileId == userId;
+        allow update: if request.auth != null && (request.auth.uid == userId || resource.data.toProfileId == userId);
+      }
+      
+      // Activities subcollection
+      match /activities/{activityId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Locations subcollection
+      match /locations/{locationId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Challenges subcollection
+      match /challenges/{challengeId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == request.resource.data.createdBy;
+        allow update: if request.auth != null && 
+          (request.auth.uid == userId || request.auth.uid == resource.data.createdBy || request.auth.uid in resource.data.participants);
+      }
+    }
+    
+    // Global users lookup by profileId (for friend search)
+    // Note: This requires an index on profileId field
+    match /users/{userId} {
+      allow read: if request.auth != null;
+    }
+    
+    // Challenges collection (global for searching)
+    match /challenges/{challengeId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.createdBy;
+      allow update: if request.auth != null && 
+        (request.auth.uid == resource.data.createdBy || request.auth.uid in resource.data.participants);
+    }
+  }
+}

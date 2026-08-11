@@ -1,6 +1,7 @@
 package com.example.touchgrassirl.data.repository
 
 import com.example.touchgrassirl.data.local.dao.SocialDao
+import com.example.touchgrassirl.data.local.dao.UserProgressDao
 import com.example.touchgrassirl.data.local.entity.FriendEntity
 import com.example.touchgrassirl.data.local.entity.GiftEntity
 import com.example.touchgrassirl.data.local.entity.MyProfileEntity
@@ -11,6 +12,7 @@ import java.util.UUID
 
 class LocalSocialRepository(
     private val socialDao: SocialDao,
+    private val progressDao: UserProgressDao,
 ) : SocialRepository {
 
     override fun observeFriends(): Flow<List<FriendEntity>> = socialDao.observeFriends()
@@ -51,10 +53,18 @@ class LocalSocialRepository(
         val existing = socialDao.getFriend(targetProfileId)
         if (existing != null) return
 
+        // Look up target's display name if they exist locally
+        val targetProfile = socialDao.getFriend(targetProfileId)
+        val targetName = if (targetProfile != null) {
+            targetProfile.displayName
+        } else {
+            "User-${targetProfileId.takeLast(5)}"
+        }
+
         socialDao.upsertPendingRequest(
             PendingRequestEntity(
                 profileId = targetProfileId,
-                displayName = "User-${targetProfileId.takeLast(5)}",
+                displayName = targetName,
                 direction = "outgoing",
             )
         )
@@ -62,7 +72,16 @@ class LocalSocialRepository(
         socialDao.upsertFriend(
             FriendEntity(
                 profileId = targetProfileId,
-                displayName = "User-${targetProfileId.takeLast(5)}",
+                displayName = targetName,
+                status = "pending",
+            )
+        )
+
+        // Create incoming request on target's side with sender's actual name
+        socialDao.upsertFriend(
+            FriendEntity(
+                profileId = myProfile.profileId,
+                displayName = myProfile.displayName,
                 status = "pending",
             )
         )
@@ -92,8 +111,15 @@ class LocalSocialRepository(
         socialDao.upsertGift(gift)
     }
 
-    override suspend fun claimGift(giftId: String) {
+override suspend fun claimGift(giftId: String) {
         socialDao.claimGift(giftId)
+    }
+
+    override suspend fun getStreak(): Pair<Int, Int> {
+        val progress = progressDao.getProgress()
+        val current = progress?.currentStreak ?: 0
+        val longest = progress?.longestStreak ?: 0
+        return current to longest
     }
 
     private fun generateProfileId(): String {

@@ -95,7 +95,7 @@ class FirebaseSocialRepository(
             .set(
                 mapOf(
                     "profileId" to getMyProfileId(),
-                    "displayName" to "Someone",
+                    "displayName" to (targetDoc.getString("displayName") ?: "Friend"),
                     "status" to "pending",
                     "direction" to "incoming",
                     "sentAt" to System.currentTimeMillis(),
@@ -304,7 +304,7 @@ class FirebaseSocialRepository(
         ).await()
     }
 
-    suspend fun getStreak(): Pair<Int, Int> {
+    override suspend fun getStreak(): Pair<Int, Int> {
         val doc = myProfileDoc().get().await()
         val current = (doc.getLong("currentStreak") ?: 0).toInt()
         val longest = (doc.getLong("longestStreak") ?: 0).toInt()
