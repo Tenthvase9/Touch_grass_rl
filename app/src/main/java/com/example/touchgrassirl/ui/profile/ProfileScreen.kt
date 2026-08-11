@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
@@ -48,8 +49,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.touchgrassirl.R
+import com.example.touchgrassirl.data.repository.SocialRepository
 import com.example.touchgrassirl.ui.theme.DeepForest
 import com.example.touchgrassirl.ui.components.GlassCard
+import com.example.touchgrassirl.ui.location.LocationHistoryScreen
 import com.example.touchgrassirl.ui.theme.ForestGreen
 import com.example.touchgrassirl.ui.theme.MeadowGreen
 import com.example.touchgrassirl.ui.theme.SunGold
@@ -57,6 +60,7 @@ import com.example.touchgrassirl.ui.theme.SunGold
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel,
+    socialRepository: SocialRepository,
     onOpenSettings: () -> Unit = {},
     onOpenHistory: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -75,6 +79,7 @@ fun ProfileScreen(
     var showProfileDialog by remember { mutableStateOf(false) }
     var editedBio by remember { mutableStateOf("") }
     var selectedAvatar by remember(avatar) { mutableStateOf(avatar) }
+    var showLocationHistory by remember { mutableStateOf(false) }
 
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -306,6 +311,43 @@ fun ProfileScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Location history card
+            GlassCard {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showLocationHistory = true }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "\uD83D\uDCCD",
+                        fontSize = 24.sp,
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Location History",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = "View your outdoor locations",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "View locations",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Progress rings
@@ -434,6 +476,13 @@ fun ProfileScreen(
                     Text("Cancel")
                 }
             },
+        )
+    }
+
+    if (showLocationHistory) {
+        LocationHistoryScreen(
+            socialRepository = socialRepository,
+            onBack = { showLocationHistory = false },
         )
     }
 }

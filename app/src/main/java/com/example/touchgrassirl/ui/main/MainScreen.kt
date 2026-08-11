@@ -119,6 +119,7 @@ fun MainScreen(
                 )
                 ProfileScreen(
                     viewModel = profileViewModel,
+                    socialRepository = socialRepository,
                     onOpenSettings = { showSettings = true },
                     onOpenHistory = onOpenHistory,
                     modifier = Modifier.padding(innerPadding),

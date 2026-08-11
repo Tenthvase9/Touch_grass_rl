@@ -56,6 +56,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.touchgrassirl.data.local.entity.FriendEntity
 import com.example.touchgrassirl.data.repository.PendingRequestInfo
 import com.example.touchgrassirl.data.repository.SocialRepository
+import com.example.touchgrassirl.ui.challenges.ChallengesScreen
 import com.example.touchgrassirl.ui.components.GlassCard
 import com.example.touchgrassirl.ui.components.StatPill
 import com.example.touchgrassirl.ui.theme.ForestGreen
@@ -78,6 +79,7 @@ fun FriendsScreen(
     var giftFriend by remember { mutableStateOf<FriendEntity?>(null) }
     var selectedFriend by remember { mutableStateOf<FriendEntity?>(null) }
     var showGifts by remember { mutableStateOf(false) }
+    var showChallenges by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize()) {
         Surface(
@@ -138,6 +140,11 @@ fun FriendsScreen(
                                 onClick = { showGifts = true },
                             )
                         }
+                        item {
+                            ChallengesCard(
+                                onClick = { showChallenges = true },
+                            )
+                        }
                         items(state.friends, key = { it.profileId }) { friend ->
                             FriendCard(
                                 friend = friend,
@@ -196,6 +203,13 @@ fun FriendsScreen(
             GiftsReceivedScreen(
                 socialRepository = socialRepository,
                 onBack = { showGifts = false },
+            )
+        }
+
+        if (showChallenges) {
+            ChallengesScreen(
+                socialRepository = socialRepository,
+                onBack = { showChallenges = false },
             )
         }
     }
@@ -442,6 +456,46 @@ private fun GiftsReceivedCard(
             Icon(
                 Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = "View gifts",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(10.dp))
+}
+
+@Composable
+private fun ChallengesCard(
+    onClick: () -> Unit,
+) {
+    GlassCard {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "\uD83C\uDFC6",
+                fontSize = 24.sp,
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Challenges",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = "Compete with friends",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "View challenges",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

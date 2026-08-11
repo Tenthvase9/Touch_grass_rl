@@ -15,9 +15,11 @@ import com.example.touchgrassirl.data.repository.SocialRepository
 import com.example.touchgrassirl.data.repository.TouchGrassRepository
 import com.example.touchgrassirl.ui.activity.ActivityFeedScreen
 import com.example.touchgrassirl.ui.activity.ActivityFeedViewModel
+import com.example.touchgrassirl.ui.challenges.ChallengesScreen
 import com.example.touchgrassirl.ui.history.SessionHistoryScreen
 import com.example.touchgrassirl.ui.leaderboard.LeaderboardScreen
 import com.example.touchgrassirl.ui.leaderboard.LeaderboardViewModel
+import com.example.touchgrassirl.ui.location.LocationHistoryScreen
 import com.example.touchgrassirl.ui.main.MainScreen
 import com.example.touchgrassirl.ui.profile.ProfileScreen
 import com.example.touchgrassirl.ui.profile.ProfileViewModel
@@ -77,6 +79,20 @@ composable(Routes.HISTORY) {
 
         composable(Routes.LEADERBOARD) {
             LeaderboardScreen(
+                socialRepository = socialRepository,
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.CHALLENGES) {
+            ChallengesScreen(
+                socialRepository = socialRepository,
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.LOCATION_HISTORY) {
+            LocationHistoryScreen(
                 socialRepository = socialRepository,
                 onBack = { navController.popBackStack() },
             )
