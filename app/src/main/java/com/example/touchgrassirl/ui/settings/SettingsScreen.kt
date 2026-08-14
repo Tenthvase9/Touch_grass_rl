@@ -37,8 +37,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
 import androidx.core.content.FileProvider
 import java.io.File
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,8 +55,12 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import com.example.touchgrassirl.data.local.entity.UserProgressEntity
 import com.example.touchgrassirl.data.service.OutdoorDetectionService
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.gms.location.Priority
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -111,22 +120,41 @@ fun SettingsScreen(
         }
     }
 
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (!granted) {
+            Toast.makeText(
+                context,
+                "Location permission is needed to set home",
+                Toast.LENGTH_LONG,
+            ).show()
+        }
+    }
+
     val getCurrentLocation: ((Double, Double) -> Unit) -> Unit = { callback ->
         val fusedClient = LocationServices.getFusedLocationProviderClient(context)
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED
-        ) {
+        val fineGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+        if (fineGranted) {
             try {
-                fusedClient.getCurrentLocation(
-                    com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
-                    CancellationTokenSource().token,
-                ).addOnSuccessListener { location ->
-                    if (location != null) {
-                        callback(location.latitude, location.longitude)
+                fusedClient.lastLocation
+                    .addOnSuccessListener { last ->
+                        if (last != null) {
+                            callback(last.latitude, last.longitude)
+                        } else {
+                            requestFreshLocation(context, fusedClient, callback)
+                        }
                     }
-                }
+                    .addOnFailureListener { requestFreshLocation(context, fusedClient, callback) }
             } catch (_: SecurityException) {
+                Toast.makeText(context, "Couldn't access location", Toast.LENGTH_SHORT).show()
             }
+        } else {
+            Toast.makeText(context, "Location permission needed", Toast.LENGTH_SHORT).show()
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
@@ -242,6 +270,11 @@ fun SettingsScreen(
                                             .apply()
                                         homeLocationSet = true
                                         OutdoorDetectionService.start(context)
+                                        Toast.makeText(
+                                            context,
+                                            "Home set — outdoor tracking on",
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = ForestGreen),
@@ -421,4 +454,47 @@ private fun SettingsToggle(
             ),
         )
     }
+}
+
+private fun requestFreshLocation(
+    context: Context,
+    fusedClient: FusedLocationProviderClient,
+    onResult: (Double, Double) -> Unit,
+) {
+    val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1_000L)
+        .build()
+    var done = false
+    val callback = object : LocationCallback() {
+        override fun onLocationResult(result: LocationResult) {
+            val loc = result.lastLocation ?: return
+            done = true
+            fusedClient.removeLocationUpdates(this)
+            onResult(loc.latitude, loc.longitude)
+        }
+    }
+    try {
+        fusedClient.requestLocationUpdates(request, callback, Looper.getMainLooper())
+            .addOnFailureListener {
+                done = true
+                Toast.makeText(
+                    context,
+                    "Couldn't get location. Turn on GPS and try again.",
+                    Toast.LENGTH_LONG,
+                ).show()
+            }
+    } catch (_: SecurityException) {
+        done = true
+        Toast.makeText(context, "Location permission needed", Toast.LENGTH_SHORT).show()
+    }
+    Handler(Looper.getMainLooper()).postDelayed({
+        if (!done) {
+            done = true
+            fusedClient.removeLocationUpdates(callback)
+            Toast.makeText(
+                context,
+                "Couldn't get location. Turn on GPS and try again.",
+                Toast.LENGTH_LONG,
+            ).show()
+        }
+    }, 15_000)
 }

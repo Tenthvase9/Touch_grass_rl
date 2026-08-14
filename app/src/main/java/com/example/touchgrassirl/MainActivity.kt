@@ -23,17 +23,21 @@ import com.example.touchgrassirl.ui.theme.TouchGrassTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val permissionLauncher = registerForActivityResult(
+    private val foregroundPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
         val fineLocation = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val backgroundLocation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] ?: false
-        } else true
-
         if (fineLocation) {
+            requestBackgroundLocation()
+        } else {
             startOutdoorDetection()
         }
+    }
+
+    private val backgroundPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) {
+        startOutdoorDetection()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,9 +70,6 @@ class MainActivity : ComponentActivity() {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
         )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            permissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
         }
@@ -78,10 +79,24 @@ class MainActivity : ComponentActivity() {
         }
 
         if (needsRequest) {
-            permissionLauncher.launch(permissions.toTypedArray())
+            foregroundPermissionLauncher.launch(permissions.toTypedArray())
         } else {
-            startOutdoorDetection()
+            requestBackgroundLocation()
         }
+    }
+
+    private fun requestBackgroundLocation() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val granted = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                backgroundPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                return
+            }
+        }
+        startOutdoorDetection()
     }
 
     private fun startOutdoorDetection() {
