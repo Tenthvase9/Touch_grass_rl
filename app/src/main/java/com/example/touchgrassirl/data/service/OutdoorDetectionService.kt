@@ -12,10 +12,7 @@ import androidx.core.app.NotificationCompat
 import com.example.touchgrassirl.MainActivity
 import com.example.touchgrassirl.R
 import com.example.touchgrassirl.TouchGrassApp
-import com.example.touchgrassirl.data.local.TouchGrassDatabase
-import com.example.touchgrassirl.data.local.entity.DailyLogEntity
 import com.example.touchgrassirl.data.repository.SocialRepository
-import com.example.touchgrassirl.domain.GameConstants
 import com.example.touchgrassirl.domain.ProgressCalculator
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -35,7 +32,6 @@ import kotlin.math.sqrt
 
 class OutdoorDetectionService : Service() {
 
-    private lateinit var database: TouchGrassDatabase
     private val fused by lazy { LocationServices.getFusedLocationProviderClient(this) }
     private val scope = CoroutineScope(Dispatchers.IO)
     private var samplerJob: Job? = null
@@ -44,13 +40,16 @@ class OutdoorDetectionService : Service() {
     private var isAway: Boolean = false
     private var todayEpochDay: Long = 0L
 
+    private val repository by lazy {
+        (application as? TouchGrassApp)?.repository
+    }
+
     private val socialRepository: SocialRepository? by lazy {
         (application as? TouchGrassApp)?.socialRepository
     }
 
     override fun onCreate() {
         super.onCreate()
-        database = TouchGrassDatabase.getInstance(this)
         todayEpochDay = LocalDate.now().toEpochDay()
     }
 
@@ -151,48 +150,16 @@ class OutdoorDetectionService : Service() {
         }
 
         scope.launch {
-            val existing = database.dailyLogDao().getForDay(today)
-            val xp = minutes * GameConstants.XP_PER_OUTDOOR_MINUTE
-            if (existing != null) {
-                database.dailyLogDao().upsert(
-                    existing.copy(
-                        outdoorMinutes = existing.outdoorMinutes + minutes,
-                        xpEarned = existing.xpEarned + xp,
-                        touchedGrass = existing.touchedGrass ||
-                            minutes >= GameConstants.MIN_OUTDOOR_MINUTES,
-                    )
-                )
-            } else {
-                database.dailyLogDao().upsert(
-                    DailyLogEntity(
-                        dateEpochDay = today,
-                        outdoorMinutes = minutes,
-                        xpEarned = xp,
-                        touchedGrass = minutes >= GameConstants.MIN_OUTDOOR_MINUTES,
-                    )
-                )
-            }
-
-            val progress = database.userProgressDao().getProgress()
-            if (progress != null) {
-                val newTotalMinutes = progress.totalOutdoorMinutes + minutes
-                database.userProgressDao().upsert(
-                    progress.copy(
-                        totalOutdoorMinutes = newTotalMinutes,
-                        totalXp = progress.totalXp + xp,
-                    )
-                )
-                val level = ProgressCalculator.levelFromTotalXp(progress.totalXp + xp)
-                socialRepository?.syncMyStats(
-                    outdoorMinutes = newTotalMinutes,
-                    streak = progress.currentStreak,
-                    level = level,
-                )
-                socialRepository?.addActivity(
-                    type = "outdoor_time",
-                    message = "Spent $minutes minutes outside",
-                )
-            }
+            val updated = repository?.recordOutdoorTime(minutes) ?: return@launch
+            socialRepository?.syncMyStats(
+                outdoorMinutes = updated.totalOutdoorMinutes,
+                streak = updated.currentStreak,
+                level = ProgressCalculator.levelFromTotalXp(updated.totalXp),
+            )
+            socialRepository?.addActivity(
+                type = "outdoor_time",
+                message = "Spent $minutes minutes outside",
+            )
             updateNotification()
         }
     }
@@ -224,8 +191,7 @@ class OutdoorDetectionService : Service() {
 
     private fun updateNotification() {
         scope.launch {
-            val today = LocalDate.now().toEpochDay()
-            val log = database.dailyLogDao().getForDay(today)
+            val log = repository?.getTodayLog()
             val minutes = log?.outdoorMinutes ?: 0
             val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             manager.notify(NOTIFICATION_ID, buildNotification(minutes))

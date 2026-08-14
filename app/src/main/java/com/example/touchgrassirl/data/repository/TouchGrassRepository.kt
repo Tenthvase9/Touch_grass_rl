@@ -403,12 +403,63 @@ class TouchGrassRepository(
         )
     }
 
+    suspend fun recordOutdoorTime(minutes: Int): UserProgressEntity {
+        if (minutes <= 0) return progressDao.getProgress() ?: UserProgressEntity()
+        val today = LocalDate.now().toEpochDay()
+        val progress = progressDao.getProgress() ?: UserProgressEntity()
+        val baseLog = ensureTodayLog()
+        val alreadyTouchedToday = baseLog.touchedGrass
+        val counted = minutes >= GameConstants.MIN_OUTDOOR_MINUTES
+        val xp = minutes * GameConstants.XP_PER_OUTDOOR_MINUTE
+        val touchedGrassToday = alreadyTouchedToday || counted
+
+        var newStreak = progress.currentStreak
+        if (counted && !alreadyTouchedToday) {
+            newStreak = when (progress.lastTouchGrassEpochDay) {
+                null -> 1
+                today - 1 -> progress.currentStreak + 1
+                today -> progress.currentStreak
+                else -> 1
+            }
+        }
+
+        val updatedLog = baseLog.copy(
+            touchedGrass = touchedGrassToday,
+            outdoorMinutes = baseLog.outdoorMinutes + minutes,
+            xpEarned = baseLog.xpEarned + xp,
+        )
+        dailyLogDao.upsert(updatedLog)
+
+        val newTotalXp = progress.totalXp + xp
+        val newLevel = ProgressCalculator.levelFromTotalXp(newTotalXp)
+        val updatedProgress = progress.copy(
+            totalXp = newTotalXp,
+            currentStreak = newStreak,
+            longestStreak = maxOf(progress.longestStreak, newStreak),
+            lastTouchGrassEpochDay = if (counted) today else progress.lastTouchGrassEpochDay,
+            totalOutdoorMinutes = progress.totalOutdoorMinutes + minutes,
+            gardenPlotCount = ProgressCalculator.gardenPlotsForLevel(newLevel),
+        )
+        progressDao.upsert(updatedProgress)
+
+        unlockAchievements(
+            progress = progress,
+            todayLog = updatedLog,
+            sessionCounted = counted,
+            sessionDurationMinutes = minutes,
+            sessionStartHour = null,
+            isRaining = false,
+            visitedParkToday = false,
+        )
+        return updatedProgress
+    }
+
     private suspend fun unlockAchievements(
         progress: UserProgressEntity,
         todayLog: DailyLogEntity?,
         sessionCounted: Boolean,
         sessionDurationMinutes: Int,
-        sessionStartHour: Int,
+        sessionStartHour: Int?,
         isRaining: Boolean,
         visitedParkToday: Boolean,
     ): List<String> {
