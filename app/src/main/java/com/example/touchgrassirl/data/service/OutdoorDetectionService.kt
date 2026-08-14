@@ -6,8 +6,8 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.location.Location
 import android.os.IBinder
-import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import com.example.touchgrassirl.MainActivity
 import com.example.touchgrassirl.R
@@ -17,30 +17,32 @@ import com.example.touchgrassirl.data.local.entity.DailyLogEntity
 import com.example.touchgrassirl.data.repository.SocialRepository
 import com.example.touchgrassirl.domain.GameConstants
 import com.example.touchgrassirl.domain.ProgressCalculator
-import com.google.android.gms.location.ActivityRecognition
-import com.google.android.gms.location.ActivityTransition
-import com.google.android.gms.location.ActivityTransitionRequest
-import com.google.android.gms.location.DetectedActivity
-import com.google.android.gms.location.Geofence
-import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.Tasks
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.time.LocalDate
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class OutdoorDetectionService : Service() {
 
     private lateinit var database: TouchGrassDatabase
-
-    private var outdoorStartMillis: Long = 0L
-    private var isOutdoors: Boolean = false
-    private var lastActivityType: Int = DetectedActivity.STILL
-    private var todayEpochDay: Long = 0L
-
-    private val geofencingClient by lazy { LocationServices.getGeofencingClient(this) }
-    private val activityClient by lazy { ActivityRecognition.getClient(this) }
+    private val fused by lazy { LocationServices.getFusedLocationProviderClient(this) }
     private val scope = CoroutineScope(Dispatchers.IO)
+    private var samplerJob: Job? = null
+
+    private var lastSampleMillis: Long = 0L
+    private var isAway: Boolean = false
+    private var todayEpochDay: Long = 0L
 
     private val socialRepository: SocialRepository? by lazy {
         (application as? TouchGrassApp)?.socialRepository
@@ -53,141 +55,93 @@ class OutdoorDetectionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent != null) {
-            when (intent.action) {
-                "ACTION_EXITED_HOME" -> onExitedHome()
-                "ACTION_ENTERED_HOME" -> onEnteredHome()
-                "ACTION_ACTIVITY_TRANSITION" -> {
-                    val activityType = intent.getIntExtra("activity_type", DetectedActivity.STILL)
-                    val transitionType = intent.getIntExtra("transition_type", -1)
-                    if (transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
-                        handleActivityTransition(activityType)
-                    }
-                }
-                else -> ensureStarted()
-            }
-        } else {
-            ensureStarted()
-        }
+        ensureStarted()
         return START_STICKY
     }
 
     private fun ensureStarted() {
         startForeground(NOTIFICATION_ID, buildNotification(0))
-        registerGeofence()
-        registerActivityTransitions()
+        samplerJob?.cancel()
+        samplerJob = scope.launch { samplerLoop() }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    private fun registerGeofence() {
-        val prefs = getSharedPreferences("touch_grass_prefs", Context.MODE_PRIVATE)
-        val homeLat = prefs.getFloat("home_lat", 0f).toDouble()
-        val homeLng = prefs.getFloat("home_lng", 0f).toDouble()
-        if (homeLat == 0.0 && homeLng == 0.0) return
-
-        val geofence = Geofence.Builder()
-            .setRequestId("home_geofence")
-            .setCircularRegion(homeLat, homeLng, GEOFENCE_RADIUS_METERS)
-            .setExpirationDuration(Geofence.NEVER_EXPIRE)
-            .setTransitionTypes(
-                Geofence.GEOFENCE_TRANSITION_EXIT or Geofence.GEOFENCE_TRANSITION_ENTER
-            )
-            .build()
-
-        val request = GeofencingRequest.Builder()
-            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_EXIT)
-            .addGeofence(geofence)
-            .build()
-
-        try {
-            geofencingClient.addGeofences(request, geofencePendingIntent())
-                .addOnSuccessListener { }
-                .addOnFailureListener { }
-        } catch (_: SecurityException) {
-        }
-    }
-
-    private fun registerActivityTransitions() {
-        val activities = listOf(
-            DetectedActivity.IN_VEHICLE,
-            DetectedActivity.ON_BICYCLE,
-            DetectedActivity.ON_FOOT,
-            DetectedActivity.RUNNING,
-            DetectedActivity.WALKING,
-            DetectedActivity.STILL,
-        )
-        val transitions = activities.map { activityType ->
-            ActivityTransition.Builder()
-                .setActivityType(activityType)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                .build()
-        }
-
-        val request = ActivityTransitionRequest(transitions)
-
-        try {
-            activityClient.requestActivityTransitionUpdates(request, activityPendingIntent())
-                .addOnSuccessListener { }
-                .addOnFailureListener { }
-        } catch (_: SecurityException) {
-        }
-    }
-
-    private fun geofencePendingIntent(): PendingIntent {
-        val intent = Intent(this, GeofenceReceiver::class.java)
-        return PendingIntent.getBroadcast(
-            this,
-            GEOFENCE_REQUEST_CODE,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
-        )
-    }
-
-    private fun activityPendingIntent(): PendingIntent {
-        val intent = Intent(this, ActivityTransitionReceiver::class.java)
-        return PendingIntent.getBroadcast(
-            this,
-            ACTIVITY_REQUEST_CODE,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
-        )
-    }
-
-    private fun handleActivityTransition(activityType: Int) {
-        lastActivityType = activityType
-        if (!isOutdoors) return
-
-        if (activityType == DetectedActivity.STILL) {
-            val elapsedMin = ((SystemClock.elapsedRealtime() - outdoorStartMillis) / 60_000L).toInt()
-            if (elapsedMin > 0) {
-                awardOutdoorTime(elapsedMin)
+    private suspend fun samplerLoop() {
+        while (scope.isActive) {
+            try {
+                trySample()
+            } catch (_: Exception) {
             }
-            isOutdoors = false
-            outdoorStartMillis = 0L
+            delay(SAMPLE_INTERVAL_MS)
+        }
+    }
+
+    private suspend fun trySample() {
+        val today = LocalDate.now().toEpochDay()
+        if (today != todayEpochDay) {
+            todayEpochDay = today
+            lastSampleMillis = 0L
+            isAway = false
+        }
+
+        val location = try {
+            withTimeout(30_000) {
+                Tasks.await(
+                    fused.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null),
+                )
+            }
+        } catch (_: Exception) {
+            null
+        } ?: return
+
+        if (location.accuracy > ACCURACY_THRESHOLD_METERS) return
+
+        val prefs = getSharedPreferences("touch_grass_prefs", Context.MODE_PRIVATE)
+        var homeLat = prefs.getFloat("home_lat", 0f).toDouble()
+        var homeLng = prefs.getFloat("home_lng", 0f).toDouble()
+        if (homeLat == 0.0 && homeLng == 0.0) {
+            // Auto-set home from the first good fix so tracking works without manual setup.
+            prefs.edit()
+                .putFloat("home_lat", location.latitude.toFloat())
+                .putFloat("home_lng", location.longitude.toFloat())
+                .apply()
+            return
+        }
+
+        val dist = distanceMeters(homeLat, homeLng, location.latitude, location.longitude)
+        val nowMs = System.currentTimeMillis()
+
+        if (dist > AWAY_THRESHOLD_METERS) {
+            if (lastSampleMillis != 0L) {
+                val delta = ((nowMs - lastSampleMillis) / 60_000L).toInt()
+                if (delta > 0) awardOutdoorTime(delta)
+            }
+            lastSampleMillis = nowMs
+            isAway = true
         } else {
-            outdoorStartMillis = SystemClock.elapsedRealtime()
+            if (isAway && lastSampleMillis != 0L) {
+                val delta = ((nowMs - lastSampleMillis) / 60_000L).toInt()
+                if (delta > 0) awardOutdoorTime(delta)
+            }
+            isAway = false
+            lastSampleMillis = 0L
         }
         updateNotification()
     }
 
-    private fun onExitedHome() {
-        if (!isOutdoors) {
-            isOutdoors = true
-            outdoorStartMillis = SystemClock.elapsedRealtime()
-            updateNotification()
-        }
-    }
-
-    private fun onEnteredHome() {
-        if (isOutdoors) {
-            val elapsedMin = ((SystemClock.elapsedRealtime() - outdoorStartMillis) / 60_000L).toInt()
-            if (elapsedMin > 0) {
-                awardOutdoorTime(elapsedMin)
-            }
-            isOutdoors = false
-            updateNotification()
-        }
+    private fun distanceMeters(
+        lat1: Double,
+        lng1: Double,
+        lat2: Double,
+        lng2: Double,
+    ): Double {
+        val r = 6_371_000.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLng = Math.toRadians(lng2 - lng1)
+        val a = sin(dLat / 2) * sin(dLat / 2) + cos(Math.toRadians(lat1)) *
+            cos(Math.toRadians(lat2)) * sin(dLng / 2) * sin(dLng / 2)
+        return r * 2 * atan2(sqrt(a), sqrt(1 - a))
     }
 
     private fun awardOutdoorTime(minutes: Int) {
@@ -204,7 +158,8 @@ class OutdoorDetectionService : Service() {
                     existing.copy(
                         outdoorMinutes = existing.outdoorMinutes + minutes,
                         xpEarned = existing.xpEarned + xp,
-                        touchedGrass = existing.touchedGrass || minutes >= GameConstants.MIN_OUTDOOR_MINUTES,
+                        touchedGrass = existing.touchedGrass ||
+                            minutes >= GameConstants.MIN_OUTDOOR_MINUTES,
                     )
                 )
             } else {
@@ -250,10 +205,10 @@ class OutdoorDetectionService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val contentText = if (isOutdoors) {
+        val contentText = if (isAway) {
             "\uD83C\uDF31 Outside now — $minutes min today"
         } else {
-            "\uD83C\uDF3F Ready to track your outdoor time"
+            "\uD83C\uDF3F Tracking your outdoor time"
         }
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
@@ -278,17 +233,20 @@ class OutdoorDetectionService : Service() {
     }
 
     override fun onDestroy() {
-        geofencingClient.removeGeofences(geofencePendingIntent())
-        activityClient.removeActivityTransitionUpdates(activityPendingIntent())
+        if (isAway && lastSampleMillis != 0L) {
+            val delta = ((System.currentTimeMillis() - lastSampleMillis) / 60_000L).toInt()
+            if (delta > 0) awardOutdoorTime(delta)
+        }
+        samplerJob?.cancel()
         super.onDestroy()
     }
 
     companion object {
         const val CHANNEL_ID = "outdoor_detection"
         const val NOTIFICATION_ID = 2001
-        const val GEOFENCE_RADIUS_METERS = 150f
-        const val GEOFENCE_REQUEST_CODE = 3001
-        const val ACTIVITY_REQUEST_CODE = 3002
+        const val SAMPLE_INTERVAL_MS = 10 * 60_000L
+        const val AWAY_THRESHOLD_METERS = 500.0
+        const val ACCURACY_THRESHOLD_METERS = 100.0
 
         fun start(context: Context) {
             val intent = Intent(context, OutdoorDetectionService::class.java)

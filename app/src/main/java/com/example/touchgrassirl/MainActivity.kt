@@ -85,10 +85,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startOutdoorDetection() {
-        val prefs = getSharedPreferences("touch_grass_prefs", Context.MODE_PRIVATE)
-        val hasHomeSet = prefs.contains("home_lat") && prefs.contains("home_lng")
-        if (hasHomeSet) {
-            OutdoorDetectionService.start(this)
-        }
+        OutdoorDetectionService.start(this)
     }
 }

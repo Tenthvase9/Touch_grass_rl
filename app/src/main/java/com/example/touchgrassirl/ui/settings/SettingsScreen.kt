@@ -215,7 +215,7 @@ fun SettingsScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = if (homeLocationSet) "Home set — we'll detect when you leave and return." else "Set your home to enable automatic outdoor tracking.",
+                            text = if (homeLocationSet) "Home set — we'll detect when you leave the area." else "Home is set automatically from your location. You can reset it if needed.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
