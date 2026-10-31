@@ -13,6 +13,7 @@ import com.example.touchgrassirl.MainActivity
 import com.example.touchgrassirl.R
 import com.example.touchgrassirl.TouchGrassApp
 import com.example.touchgrassirl.data.repository.SocialRepository
+import com.example.touchgrassirl.data.motion.DailyStepTracker
 import com.example.touchgrassirl.domain.ProgressCalculator
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -40,6 +41,12 @@ class OutdoorDetectionService : Service() {
     private var isAway: Boolean = false
     private var todayEpochDay: Long = 0L
 
+    private val dailyStepTracker by lazy {
+        DailyStepTracker(this) { steps ->
+            scope.launch { repository?.syncDailySteps(steps) }
+        }
+    }
+
     private val repository by lazy {
         (application as? TouchGrassApp)?.repository
     }
@@ -51,6 +58,7 @@ class OutdoorDetectionService : Service() {
     override fun onCreate() {
         super.onCreate()
         todayEpochDay = LocalDate.now().toEpochDay()
+        dailyStepTracker.register()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -204,6 +212,7 @@ class OutdoorDetectionService : Service() {
             if (delta > 0) awardOutdoorTime(delta)
         }
         samplerJob?.cancel()
+        dailyStepTracker.unregister()
         super.onDestroy()
     }
 

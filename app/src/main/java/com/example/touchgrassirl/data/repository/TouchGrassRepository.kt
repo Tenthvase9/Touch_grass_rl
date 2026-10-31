@@ -290,7 +290,8 @@ class TouchGrassRepository(
             }
 
             val updatedMinutes = baseLog.outdoorMinutes + durationMinutes
-            val updatedSteps = baseLog.steps + motion.steps
+            // session steps are display-only; daily tracker is source of truth
+            val updatedSteps = maxOf(baseLog.steps, motion.steps)
             val updatedDistance = baseLog.distanceMeters + motion.distanceMeters
 
             if (!baseLog.stepsXpClaimed && updatedSteps >= GameConstants.STEPS_XP_THRESHOLD) {
@@ -452,6 +453,24 @@ class TouchGrassRepository(
             visitedParkToday = false,
         )
         return updatedProgress
+    }
+
+    suspend fun syncDailySteps(steps: Int) {
+        // automatic source of truth for steps; session finish no longer adds, see finishSession
+        val baseLog = ensureTodayLog()
+        if (steps <= baseLog.steps) return
+
+        var stepsXp = 0
+        if (!baseLog.stepsXpClaimed && steps >= GameConstants.STEPS_XP_THRESHOLD) {
+            stepsXp = ProgressCalculator.stepsXp(steps)
+        }
+        dailyLogDao.upsert(
+            baseLog.copy(
+                steps = steps,
+                xpEarned = baseLog.xpEarned + stepsXp,
+                stepsXpClaimed = baseLog.stepsXpClaimed || stepsXp > 0,
+            ),
+        )
     }
 
     private suspend fun unlockAchievements(

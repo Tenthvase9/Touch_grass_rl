@@ -6,7 +6,7 @@ import android.app.NotificationManager
 import com.example.touchgrassirl.data.local.TouchGrassDatabase
 import com.example.touchgrassirl.data.location.OutdoorLocationTracker
 import com.example.touchgrassirl.data.motion.SessionMotionTracker
-import com.example.touchgrassirl.data.repository.FirebaseSocialRepository
+import com.example.touchgrassirl.data.repository.PocketBaseSocialRepository
 import com.example.touchgrassirl.data.repository.SocialRepository
 import com.example.touchgrassirl.data.repository.TouchGrassRepository
 import com.example.touchgrassirl.data.service.OutdoorDetectionService
@@ -37,7 +37,7 @@ class TouchGrassApp : Application() {
     }
 
     val socialRepository: SocialRepository by lazy {
-        FirebaseSocialRepository()
+        PocketBaseSocialRepository(this)
     }
 
     lateinit var sessionMotionTracker: SessionMotionTracker

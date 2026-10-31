@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
+    <!-- LAN cleartext allowed because the self-hosted PocketBase backend is plain http on 192.168.0.170:8090 -->
     <application
         android:name=".TouchGrassApp"
         android:allowBackup="true"
@@ -21,7 +22,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/touchgrass_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.TouchGrassIrl">
+        android:theme="@style/Theme.TouchGrassIrl"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"
